@@ -9,8 +9,26 @@
       "topics": [{ "slug": "football", "description": "Footie!" }]
     }
   },
+  "GET /api/articles": {
+    "description": "serves an array of all articles ordered by creation date",
+    "queries": [],
+    "exampleResponse": {
+      "articles": [
+        {
+          "article_id": 1,
+          "title": "Living in the shadow of a great man",
+          "topic": "mitch",
+          "author": "butter_bridge",
+          "created_at": "2018-05-30T15:59:13.341Z",
+          "votes": 100,
+          "article_img_url": "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+          "comment_count": "2"
+        }
+      ]
+    }
+  },
   "GET /api/articles/:id": {
-    "description": "serves a single article object",
+    "description": "serves a single article",
     "exampleResponse": {
       "article": {
         "article_id": 1,
