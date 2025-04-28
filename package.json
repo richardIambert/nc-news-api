@@ -1,0 +1,30 @@
+{
+  "name": "nc-news-api",
+  "description": "API for NC News project",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "setup-dbs": "psql -f ./src/database/setup-dbs.sql",
+    "seed-dev-db": "node ./src/database/seeds/run-seed.js",
+    "seed-test-db": "NODE_ENV=test node ./src/database/seeds/run-seed.js",
+    "seed-dbs": "npm run seed-dev-db && npm run seed-test-db",
+    "prepare": "husky install",
+    "test": "vitest --reporter=verbose",
+    "dev": "nodemon src/server.js",
+    "start": "node ./src/server.js"
+  },
+  "author": "Richard Lambert <hello@richardlambert.dev>",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pg": "^8.15.6",
+    "pg-format": "^1.0.4"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.0",
+    "vitest": "^3.1.2"
+  }
+}
