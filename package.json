@@ -9,10 +9,10 @@
     "seed-test-db": "NODE_ENV=test node ./src/database/seeds/run-seed.js",
     "seed-dbs": "npm run seed-dev-db && npm run seed-test-db",
     "prepare": "husky install",
-    "test": "vitest --reporter=verbose",
+    "test": "NODE_ENV=test vitest --reporter=verbose",
     "test-api": "vitest ./test/app.test.js --reporter=verbose",
-    "test-utilities": "vitest ./test/utilities.test.js",
-    "test-seed": "vitest ./test/seed.test.js --reporter=verbose",
+    "test-utilities": "NODE_ENV=test vitest ./test/utilities.test.js",
+    "test-seed": "NODE_ENV=test vitest ./test/seed.test.js --reporter=verbose",
     "dev": "nodemon src/server.js",
     "start": "node ./src/server.js"
   },

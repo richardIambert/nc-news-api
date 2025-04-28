@@ -1,6 +1,11 @@
 import { APIError, withTryCatch } from '../utilities/index.js';
 import { getArticleByIdSchema } from '../schemas/article.schema.js';
-import { selectArticleById } from '../models/article.model.js';
+import { selectAllArticles, selectArticleById } from '../models/article.model.js';
+
+export const getArticles = withTryCatch(async (request, response, next) => {
+  const articles = await selectAllArticles();
+  return response.status(200).json({ articles });
+});
 
 export const getArticleById = withTryCatch(async (request, response, next) => {
   const { error } = getArticleByIdSchema.validate(request.params);

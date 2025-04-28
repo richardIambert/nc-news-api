@@ -41,6 +41,33 @@ describe('endpoints', () => {
     });
   });
   describe('articles', () => {
+    describe('GET /api/articles', () => {
+      test('200: responds with an object having a key of `articles` and a value that is an array containing all articles', async () => {
+        const { statusCode, body } = await request(app).get('/api/articles');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles'); // does response body have an articles property?
+        const { articles } = body;
+        expect(Array.isArray(articles)).toBe(true); // is the articles property and array?
+        expect(articles).toHaveLength(13); // does the array contain all article records?
+        for (const article of articles) {
+          expect(article).not.toHaveProperty('body'); // for each article is the body field excluded?
+          expect(article).toMatchObject({
+            article_id: expect.any(Number),
+            title: expect.any(String),
+            topic: expect.any(String),
+            author: expect.any(String),
+            created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+            votes: expect.any(Number),
+            article_img_url: expect.any(String),
+            comment_count: expect.any(String), // BUG: why is this field returned as a string?
+          });
+        }
+        expect(articles[0].article_id).toBe(3); // check the articles are arranged in date descending order
+        expect(articles[12].article_id).toBe(7);
+        expect(articles[12].comment_count).toBe('0'); // check the comment counts are correct
+        expect(articles[0].comment_count).toBe('2');
+      });
+    });
     describe('GET /api/articles/:id', () => {
       test('200: responds with an object having a key of `article` and value that is an article object', async () => {
         const { statusCode, body } = await request(app).get('/api/articles/1');

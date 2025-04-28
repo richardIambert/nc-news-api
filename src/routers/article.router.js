@@ -1,7 +1,9 @@
 import { Router } from 'express';
-import { getArticleById } from '../controllers/article.controller.js';
+import { getArticles, getArticleById } from '../controllers/article.controller.js';
 
 const articleRouter = new Router();
+
+articleRouter.route('/').get(getArticles);
 
 articleRouter.route('/:id').get(getArticleById);
 
