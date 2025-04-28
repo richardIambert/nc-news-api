@@ -92,7 +92,12 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('message');
         expect(body.message).toBe('bad request');
       });
-      test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {});
+      test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
+        const { statusCode, body } = await request(app).get('/api/articles/14');
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message');
+        expect(body.message).toBe('resource not found');
+      });
     });
   });
 });
