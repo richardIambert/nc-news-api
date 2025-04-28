@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { convertTimestampToDate, createRef } from '../src/database/seeds/utilities.js';
+import { APIError } from '../src/utilities/index.js';
 
 describe('convertTimestampToDate', () => {
   test('returns a new object', () => {
@@ -66,6 +67,41 @@ describe('createRef', () => {
     const actual = createRef(input, 'defothisone', 'andthisone');
     expect(actual).toEqual({
       42: 7,
+    });
+  });
+});
+describe('APIError', () => {
+  describe('identity', () => {
+    test('APIError is a subclass of Error', () => {
+      const statusInput = 400;
+      const messageInput = 'resource not found';
+      const actual = new APIError(statusInput, messageInput);
+      expect(actual).toBeInstanceOf(APIError);
+      expect(actual).toBeInstanceOf(Error);
+    });
+  });
+  describe('properties', () => {
+    test('instances of APIError should have a `status` property of type number', () => {
+      const statusInput = 400;
+      const messageInput = 'resource not found';
+      const actual = new APIError(statusInput, messageInput);
+      expect(actual).toHaveProperty('status', 400);
+      expect(actual.status).toBeTypeOf('number');
+    });
+    test('the `status` property is a private property with read-only access ', () => {
+      const statusInput = 400;
+      const messageInput = 'resource not found';
+      const actual = new APIError(statusInput, messageInput);
+      expect(() => {
+        actual.status = 200;
+      }).toThrowError(TypeError);
+    });
+    test('instances of APIError should have a `message` property of type string', () => {
+      const statusInput = 400;
+      const messageInput = 'resource not found';
+      const actual = new APIError(statusInput, messageInput);
+      expect(actual).toHaveProperty('message', 'resource not found');
+      expect(actual.message).toBeTypeOf('string');
     });
   });
 });
