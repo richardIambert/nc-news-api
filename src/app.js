@@ -1,10 +1,10 @@
 import express from 'express';
-import { APIRouter, articleRouter, topicRouter } from './routers/index.js';
+import { apiRouter, articleRouter, topicRouter } from './routers/index.js';
 import { handleError, handleNotFound } from './middleware/index.js';
 
 const app = express();
 
-app.use('/api', APIRouter);
+app.use('/api', apiRouter);
 app.use('/api/articles', articleRouter);
 app.use('/api/topics', topicRouter);
 

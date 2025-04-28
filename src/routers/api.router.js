@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { getAPI } from '../controllers/api.controller.js';
 
-const APIRouter = new Router();
+const apiRouter = new Router();
 
-APIRouter.route('/').get(getAPI);
+apiRouter.route('/').get(getAPI);
 
-export default APIRouter;
+export default apiRouter;
