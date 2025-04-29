@@ -344,5 +344,28 @@ describe('endpoints', () => {
         }
       });
     });
+    describe('GET /api/users/:username', () => {
+      test('200: responds with an object having a key of `user` and value that is a user object with the given `username` field', async () => {
+        const { statusCode, body } = await request(app).get('/api/users/icellusedkars');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('user');
+        const { user } = body;
+        expect(user).toMatchObject({
+          username: 'icellusedkars',
+          name: 'sam',
+          avatar_url: 'https://avatars2.githubusercontent.com/u/24604688?s=460&v=4',
+        });
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `username` parameter", async () => {
+        const { statusCode, body } = await request(app).get('/api/users/an%20invalid%20username');
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("404: responds with a 404 status and a message of 'resource not found' when no user exists with given `username`", async () => {
+        const { statusCode, body } = await request(app).get('/api/users/notarealuser');
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message', 'resource not found');
+      });
+    });
   });
 });
