@@ -1,18 +1,21 @@
 import { config } from 'dotenv';
 import pg from 'pg';
 
-config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
+const ENV = process.env.NODE_ENV || 'development';
 
-const db = new pg.Pool();
+config({ path: `${import.meta.dirname}/../../.env.${ENV}` });
 
-if (!process.env.PGDATABASE) {
-  console.error(`No PGDATABASE configured
-HINT: Have you setup the required environment variables?
-https://github.com/richardIambert/seed-db/tree/main?tab=readme-ov-file#3-setup-environment-variables
-  `);
-  process.exit(1);
-} else {
-  console.log(`Connected to ${process.env.PGDATABASE}`);
+if (!process.env.PGDATABASE && !process.env.DATABASE_URL) {
+  throw new Error('PGDATABASE or DATABASE_URL not set');
 }
 
-export default db;
+export default new pg.Pool(
+  {
+    test: {},
+    development: {},
+    production: {
+      connectionString: process.env.DATABASE_URL,
+      max: 2,
+    },
+  }[ENV]
+);

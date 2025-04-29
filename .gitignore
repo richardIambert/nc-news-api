@@ -64,6 +64,7 @@ jspm_packages/
 .env
 .env.test
 .env.development
+.env.production
 
 # Commit guard files
 _/
