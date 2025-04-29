@@ -7,7 +7,7 @@ API for NC News project.
 ### 1. Clone project repository 🐑🧪🐑
 
 ```bash
-git clone
+git clone https://github.com/richardIambert/nc-news-api.git
 cd nc-news-api
 ```
 
