@@ -11,7 +11,7 @@
   },
   "GET /api/articles": {
     "description": "serves an array of all articles ordered by creation date",
-    "queries": [],
+    "queries": ["sort_by", "order"],
     "exampleResponse": {
       "articles": [
         {

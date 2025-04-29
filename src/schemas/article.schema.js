@@ -1,5 +1,10 @@
 import Joi from 'joi';
 
+export const getArticlesSchema = Joi.object({
+  sort_by: Joi.string().valid('author', 'comment_count', 'title', 'topic', 'votes'),
+  order: Joi.string().valid('asc', 'desc'),
+});
+
 export const getArticleByIdSchema = Joi.object({
   id: Joi.string()
     .pattern(new RegExp(/^\d{1,}$/))
