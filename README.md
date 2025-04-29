@@ -17,6 +17,16 @@ cd nc-news-api
 npm install
 ```
 
+> [!NOTE] > `nc-news-api` requires the following minimum dependency versions:
+> | package | version |
+> | --------- | --------- |
+> | node | `23` |
+> | dotenv | `6.5.0` |
+> | express | `5.1.0` |
+> | joi | `17.13.3` |
+> | pg" | `8.15.6` |
+> | pg-format | `1.0.4` |
+
 ### 3. Create environment variables 🧮
 
 Using `.env.example` as an example (...👀), create a `.env.development` and `.env.test` file in the root directory of the repository.
