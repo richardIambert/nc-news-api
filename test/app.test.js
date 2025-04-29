@@ -250,4 +250,23 @@ describe('endpoints', () => {
       expect(body).toHaveProperty('message', 'resource not found');
     });
   });
+  describe('users', () => {
+    describe('GET /api/users', () => {
+      test('200: responds with an object having a key of `users` and value that is an array containing all users', async () => {
+        const { statusCode, body } = await request(app).get('/api/users');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('users');
+        const { users } = body;
+        expect(Array.isArray(users)).toBe(true);
+        expect(users.length).toBe(4);
+        for (const user of users) {
+          expect(user).toMatchObject({
+            username: expect.any(String),
+            name: expect.any(String),
+            avatar_url: expect.any(String),
+          });
+        }
+      });
+    });
+  });
 });
