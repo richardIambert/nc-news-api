@@ -132,6 +132,14 @@ describe('endpoints', () => {
         expect(articles[0].article_id).toBe(4);
         expect(articles[12].article_id).toBe(1);
       });
+      test('200: query string can select `articles` by topic', async () => {
+        const { statusCode, body } = await request(app).get('/api/articles?topic=cats');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(articles).toHaveLength(1);
+        expect(articles[0].article_id).toBe(5);
+      });
       test("400: responds with a 400 status and message of 'bad request' when passed an invalid query string", async () => {
         const { statusCode, body } = await request(app).get(
           '/api/articles?sort_by=;DROP TABLE articles;--&order=;SELECT * FROM users;--'
