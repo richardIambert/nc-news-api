@@ -2,7 +2,8 @@ import format from 'pg-format';
 import db from '../database/connection.js';
 
 export const selectArticlesWhere = async (query) => {
-  const { sort_by, order } = query;
+  const { topic, sort_by, order } = query;
+  const topicEquals = topic ? '%L' : '%s';
   const { rows: articles } = await db.query(
     format(
       `
@@ -18,11 +19,14 @@ export const selectArticlesWhere = async (query) => {
         FROM
           articles AS a
           LEFT JOIN comments AS c ON a.article_id = c.article_id
+        WHERE
+          topic = ${topicEquals}
         GROUP BY
           a.article_id
         ORDER BY
           %I %s;
       `,
+      topic || 'topic',
       sort_by || 'created_at',
       order || 'DESC'
     )

@@ -10,8 +10,8 @@
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all articles ordered by creation date",
-    "queries": ["sort_by", "order"],
+    "description": "serves an array of all articles sorted by creation date in descending order by default",
+    "queries": ["sort_by", "order", "topic"],
     "exampleResponse": {
       "articles": [
         {
