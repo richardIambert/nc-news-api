@@ -212,14 +212,14 @@ describe('endpoints', () => {
             'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
         });
       });
-      test("400: responds with a 400 status and message 'bad request' when passed an invalid `id` parameter", async () => {
+      test("400: responds with a 400 status and message of 'bad request' when passed an invalid `id` parameter", async () => {
         const { statusCode, body } = await request(app).patch('/api/articles/one').send({
           inc_votes: 1,
         });
         expect(statusCode).toBe(400);
         expect(body).toHaveProperty('message', 'bad request');
       });
-      test("400: responds with a 400 status and a message 'bad request' when passed an invalid request body", async () => {
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid request body", async () => {
         const { statusCode, body } = await request(app).patch('/api/articles/1').send({});
         expect(statusCode).toBe(400);
         expect(body).toHaveProperty('message', 'bad request');
@@ -231,6 +231,23 @@ describe('endpoints', () => {
         expect(statusCode).toBe(404);
         expect(body).toHaveProperty('message', 'resource not found');
       });
+    });
+  });
+  describe('comments', () => {
+    test('204: responds with a status of 204 and an empty response body having successfully deleted a comment with a given `id`', async () => {
+      const { statusCode, body } = await request(app).delete('/api/comments/1');
+      expect(statusCode).toBe(204);
+      expect(body).toEqual({});
+    });
+    test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `id` parameter", async () => {
+      const { statusCode, body } = await request(app).delete('/api/comments/one');
+      expect(statusCode).toBe(400);
+      expect(body).toHaveProperty('message', 'bad request');
+    });
+    test("404: responds with a 404 status and a message of 'resource not found' when no article exists with given `id`", async () => {
+      const { statusCode, body } = await request(app).delete('/api/comments/4242424');
+      expect(statusCode).toBe(404);
+      expect(body).toHaveProperty('message', 'resource not found');
     });
   });
 });
