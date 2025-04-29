@@ -17,7 +17,8 @@ cd nc-news-api
 npm install
 ```
 
-> [!NOTE] > `nc-news-api` requires the following minimum dependency versions:
+> [!NOTE]
+> `nc-news-api` requires the following minimum dependency versions:
 > | package | version |
 > | --------- | --------- |
 > | node | `23` |
