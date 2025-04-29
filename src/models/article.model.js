@@ -28,3 +28,25 @@ export const selectArticleById = async (id) => {
   const { rows } = await db.query(`SELECT * FROM articles WHERE article_id = $1;`, [id]);
   return rows[0];
 };
+
+export const selectCommentsByArticleId = async (id) => {
+  const { rows: comments } = await db.query(
+    `
+      SELECT
+        comment_id,
+        article_id,
+        author,
+        votes,
+        body,
+        created_at
+      FROM
+        comments
+      WHERE
+        article_id = $1
+      ORDER BY
+        created_at DESC;
+    `,
+    [id]
+  );
+  return comments;
+};
