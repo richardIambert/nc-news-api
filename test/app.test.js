@@ -193,5 +193,44 @@ describe('endpoints', () => {
         "404: responds with a 404 status and message of 'resource not found' when no user exists with the comment's author name"
       ); // TODO: account for potential 400 when trying to post a comment with a username that doesn't exist
     });
+    describe('PATCH /api/articles/:id', () => {
+      test('200: responds with with an object having a key of `article` and value that is an object representing the updated article', async () => {
+        const { statusCode, body } = await request(app).patch('/api/articles/1').send({
+          inc_votes: -100,
+        });
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('article');
+        expect(body.article).toMatchObject({
+          article_id: 1,
+          title: 'Living in the shadow of a great man',
+          topic: 'mitch',
+          author: 'butter_bridge',
+          body: 'I find this existence challenging',
+          created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+          votes: 0,
+          article_img_url:
+            'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
+        });
+      });
+      test("400: responds with a 400 status and message 'bad request' when passed an invalid `id` parameter", async () => {
+        const { statusCode, body } = await request(app).patch('/api/articles/one').send({
+          inc_votes: 1,
+        });
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("400: responds with a 400 status and a message 'bad request' when passed an invalid request body", async () => {
+        const { statusCode, body } = await request(app).patch('/api/articles/1').send({});
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
+        const { statusCode, body } = await request(app).patch('/api/articles/4242424').send({
+          inc_votes: 1,
+        });
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message', 'resource not found');
+      });
+    });
   });
 });

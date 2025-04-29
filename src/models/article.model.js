@@ -76,3 +76,21 @@ export const insertCommentByArticleId = async (id, comment) => {
   );
   return comments[0];
 };
+
+export const updateArticleById = async (id, update) => {
+  const { inc_votes } = update;
+  const { rows } = await db.query(
+    `
+      UPDATE 
+        articles
+      SET  
+        votes = votes + $1
+      WHERE
+        article_id = $2
+      RETURNING
+        *;
+    `,
+    [inc_votes, id]
+  );
+  return rows[0];
+};
