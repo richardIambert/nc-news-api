@@ -25,7 +25,7 @@ npm install
 > | dotenv | `6.5.0` |
 > | express | `5.1.0` |
 > | joi | `17.13.3` |
-> | pg" | `8.15.6` |
+> | pg | `8.15.6` |
 > | pg-format | `1.0.4` |
 
 ### 3. Create environment variables 🧮
