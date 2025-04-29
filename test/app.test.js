@@ -1,14 +1,19 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
+import db from '../src/database/connection.js';
+import seed from '../src/database/seeds/seed.js';
+import data from '../src/database/data/test-data/index.js';
 import request from 'supertest';
 import app from '../src/app.js';
 import endpointsJSON from '../endpoints.json';
 
+beforeEach(() => seed(data));
+
 describe('error conditions', () => {
   describe('resource not found', () => {
     test("404: responds with a 404 status and message of 'resource not found' when requesting an endpoint that doesn't exist", async () => {
-      const response = await request(app).get('/this/route/does/not/exist');
-      expect(response.statusCode).toBe(404);
-      expect(response.body.message).toBe('resource not found');
+      const { statusCode, body } = await request(app).get('/this/route/does/not/exist');
+      expect(statusCode).toBe(404);
+      expect(body).toHaveProperty('message', 'resource not found');
     });
   });
 });
@@ -89,14 +94,12 @@ describe('endpoints', () => {
       test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
         const { statusCode, body } = await request(app).get('/api/articles/one');
         expect(statusCode).toBe(400);
-        expect(body).toHaveProperty('message');
-        expect(body.message).toBe('bad request');
+        expect(body).toHaveProperty('message', 'bad request');
       });
       test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
         const { statusCode, body } = await request(app).get('/api/articles/14');
         expect(statusCode).toBe(404);
-        expect(body).toHaveProperty('message');
-        expect(body.message).toBe('resource not found');
+        expect(body).toHaveProperty('message', 'resource not found');
       });
     });
     describe('GET /api/articles/:id/comments', () => {
@@ -123,15 +126,72 @@ describe('endpoints', () => {
       test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
         const { statusCode, body } = await request(app).get('/api/articles/one/comments');
         expect(statusCode).toBe(400);
-        expect(body).toHaveProperty('message');
-        expect(body.message).toBe('bad request');
+        expect(body).toHaveProperty('message', 'bad request');
       });
       test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
         const { statusCode, body } = await request(app).get('/api/articles/424242/comments');
         expect(statusCode).toBe(404);
-        expect(body).toHaveProperty('message');
-        expect(body.message).toBe('resource not found');
+        expect(body).toHaveProperty('message', 'resource not found');
       });
+    });
+    describe('POST /api/articles/:id/comments', () => {
+      test('201: responds with with an object having a key of `comment` and value that is an object representing the newly created comment', async () => {
+        const { statusCode, body } = await request(app).post('/api/articles/1/comments').send({
+          username: 'butter_bridge',
+          body: "I can't read this article! Where are my glasses!?",
+        });
+        expect(statusCode).toBe(201);
+        expect(body).toHaveProperty('comment');
+        const { comment } = body;
+        expect(comment).toMatchObject({
+          comment_id: expect.any(Number),
+          article_id: 1,
+          author: 'butter_bridge',
+          votes: 0,
+          body: "I can't read this article! Where are my glasses!?",
+          created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+        });
+      });
+      test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
+        const { statusCode, body } = await request(app).post('/api/articles/one/comments').send({
+          username: 'butter_bridge',
+          body: "I can't read this article! Where are my glasses!?",
+        });
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the request body", async () => {
+        const { statusCode: statusCode1, body: body1 } = await request(app)
+          .post('/api/articles/1/comments')
+          .send({});
+        expect(statusCode1).toBe(400);
+        expect(body1).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode2, body: body2 } = await request(app)
+          .post('/api/articles/1/comments')
+          .send({
+            body: "I can't read this article! Where are my glasses!?",
+          });
+        expect(statusCode2).toBe(400);
+        expect(body2).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode3, body: body3 } = await request(app)
+          .post('/api/articles/1/comments')
+          .send({
+            username: 'butter_bridge',
+          });
+        expect(statusCode3).toBe(400);
+        expect(body3).toHaveProperty('message', 'bad request');
+      });
+      test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
+        const { statusCode, body } = await request(app).post('/api/articles/424242/comments').send({
+          username: 'butter_bridge',
+          body: "I can't read this article! Where are my glasses!?",
+        });
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message', 'resource not found');
+      });
+      test.todo(
+        "404: responds with a 404 status and message of 'resource not found' when no user exists with the comment's author name"
+      ); // TODO: account for potential 400 when trying to post a comment with a username that doesn't exist
     });
   });
 });
