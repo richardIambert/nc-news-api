@@ -13,3 +13,20 @@ export const selectAllUsers = async () => {
   );
   return users;
 };
+
+export const selectUserByUsername = async (username) => {
+  const { rows: users } = await db.query(
+    `
+      SELECT
+        username,
+        name,
+        avatar_url
+      FROM
+        users
+      WHERE
+        username = $1;
+    `,
+    [username]
+  );
+  return users[0];
+};
