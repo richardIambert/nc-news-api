@@ -19,3 +19,10 @@ export const postCommentByArticleIdSchema = Joi.object({
   username: Joi.string().required(),
   body: Joi.string().required(),
 }).required();
+
+export const patchArticleByIdSchema = Joi.object({
+  id: Joi.string()
+    .pattern(new RegExp(/^\d{1,}$/))
+    .required(),
+  inc_votes: Joi.number().required(),
+}).required();
