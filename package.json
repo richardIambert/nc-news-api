@@ -8,7 +8,7 @@
     "setup-dbs": "psql -f ./src/database/setup-dbs.sql",
     "seed-dev-db": "node ./src/database/seeds/run-seed.js",
     "seed-test-db": "NODE_ENV=test node ./src/database/seeds/run-seed.js",
-    "seed-production-db": "NODE_ENV=production ./src/database/seeds/run-seed.js",
+    "seed-production-db": "NODE_ENV=production node ./src/database/seeds/run-seed.js",
     "seed-dbs": "npm run seed-dev-db && npm run seed-test-db",
     "prepare": "husky install",
     "test": "NODE_ENV=test vitest --reporter=verbose",
