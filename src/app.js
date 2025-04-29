@@ -4,6 +4,8 @@ import { handleError, handleNotFound } from './middleware/index.js';
 
 const app = express();
 
+app.use(express.json());
+
 app.use('/api', apiRouter);
 app.use('/api/articles', articleRouter);
 app.use('/api/topics', topicRouter);

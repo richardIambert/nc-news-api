@@ -25,7 +25,17 @@ export const selectAllArticles = async () => {
 };
 
 export const selectArticleById = async (id) => {
-  const { rows } = await db.query(`SELECT * FROM articles WHERE article_id = $1;`, [id]);
+  const { rows } = await db.query(
+    `
+      SELECT 
+        * 
+      FROM 
+        articles 
+      WHERE 
+        article_id = $1;
+    `,
+    [id]
+  );
   return rows[0];
 };
 
@@ -49,4 +59,20 @@ export const selectCommentsByArticleId = async (id) => {
     [id]
   );
   return comments;
+};
+
+export const insertCommentByArticleId = async (id, comment) => {
+  const { username: author, body } = comment;
+  const { rows: comments } = await db.query(
+    `
+      INSERT INTO 
+        comments (article_id, author, body) 
+      VALUES 
+        ($1, $2, $3)
+      RETURNING 
+        *;
+    `,
+    [id, author, body]
+  );
+  return comments[0];
 };
