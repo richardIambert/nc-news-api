@@ -1,12 +1,13 @@
 import { APIError, withTryCatch } from '../utilities/index.js';
 import {
   getArticleByIdSchema,
+  getArticlesSchema,
   getCommentsByArticleIdSchema,
   patchArticleByIdSchema,
   postCommentByArticleIdSchema,
 } from '../schemas/article.schema.js';
 import {
-  selectAllArticles,
+  selectArticlesWhere,
   selectArticleById,
   selectCommentsByArticleId,
   insertCommentByArticleId,
@@ -14,7 +15,9 @@ import {
 } from '../models/article.model.js';
 
 export const getArticles = withTryCatch(async (request, response, next) => {
-  const articles = await selectAllArticles();
+  const { error } = getArticlesSchema.validate(request.query);
+  if (error) throw new APIError(400, 'bad request');
+  const articles = await selectArticlesWhere(request.query);
   return response.status(200).json({ articles });
 });
 

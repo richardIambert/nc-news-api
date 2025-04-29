@@ -1,25 +1,31 @@
+import format from 'pg-format';
 import db from '../database/connection.js';
 
-export const selectAllArticles = async () => {
+export const selectArticlesWhere = async (query) => {
+  const { sort_by, order } = query;
   const { rows: articles } = await db.query(
-    `
-      SELECT
-        a.article_id,
-        a.author,
-        a.title,
-        a.topic,
-        a.created_at,
-        a.votes,
-        a.article_img_url,
-        COUNT(c.article_id) as comment_count
-      FROM
-        articles AS a
-        LEFT JOIN comments AS c ON a.article_id = c.article_id
-      GROUP BY
-        a.article_id
-      ORDER BY
-        a.created_at DESC;
-    `
+    format(
+      `
+        SELECT
+          a.article_id,
+          a.title,
+          a.topic,
+          a.author,
+          a.created_at,
+          a.votes,
+          a.article_img_url,
+          COUNT(c.article_id)::INT as comment_count
+        FROM
+          articles AS a
+          LEFT JOIN comments AS c ON a.article_id = c.article_id
+        GROUP BY
+          a.article_id
+        ORDER BY
+          %I %s;
+      `,
+      sort_by || 'created_at',
+      order || 'DESC'
+    )
   );
   return articles;
 };

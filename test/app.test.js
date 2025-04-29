@@ -64,13 +64,80 @@ describe('endpoints', () => {
             created_at: expect.any(String), // TODO: research `expect.stringMatching()`
             votes: expect.any(Number),
             article_img_url: expect.any(String),
-            comment_count: expect.any(String), // BUG: why is this field returned as a string?
+            comment_count: expect.any(Number),
           });
         }
         expect(articles[0].article_id).toBe(3); // check the articles are arranged in date descending order
         expect(articles[12].article_id).toBe(7);
-        expect(articles[12].comment_count).toBe('0'); // check the comment counts are correct
-        expect(articles[0].comment_count).toBe('2');
+        expect(articles[12].comment_count).toBe(0); // check the comment counts are correct
+        expect(articles[0].comment_count).toBe(2);
+      });
+      test('200: query string can sort `articles` by author in ascending order', async () => {
+        const { statusCode, body } = await request(app).get(
+          '/api/articles?sort_by=author&order=asc'
+        );
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles).toHaveLength(13);
+        expect(articles[0].article_id).toBe(1);
+        expect(articles[12].article_id).toBe(5);
+      });
+      test('200: query string can sort `articles` by title in ascending order', async () => {
+        const { statusCode, body } = await request(app).get(
+          '/api/articles?sort_by=title&order=asc'
+        );
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles).toHaveLength(13);
+        expect(articles[0].article_id).toBe(6);
+        expect(articles[12].article_id).toBe(7);
+      });
+      test('200: query string can sort `articles` by topic in ascending order', async () => {
+        const { statusCode, body } = await request(app).get(
+          '/api/articles?sort_by=topic&order=asc'
+        );
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles).toHaveLength(13);
+        expect(articles[0].article_id).toBe(5);
+        expect(articles[12].article_id).toBe(11);
+      });
+      test('200: query string can sort `articles` by vote in ascending order', async () => {
+        const { statusCode, body } = await request(app).get(
+          '/api/articles?sort_by=votes&order=asc'
+        );
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles).toHaveLength(13);
+        expect(articles[0].article_id).toBe(11);
+        expect(articles[12].article_id).toBe(1);
+      });
+      test('200: query string can sort `articles` by comment_count in ascending order', async () => {
+        const { statusCode, body } = await request(app).get(
+          '/api/articles?sort_by=comment_count&order=asc'
+        );
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles).toHaveLength(13);
+        expect(articles[0].article_id).toBe(4);
+        expect(articles[12].article_id).toBe(1);
+      });
+      test("400: responds with a 400 status and message of 'bad request' when passed an invalid query string", async () => {
+        const { statusCode, body } = await request(app).get(
+          '/api/articles?sort_by=;DROP TABLE articles;--&order=;SELECT * FROM users;--'
+        );
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
       });
     });
     describe('GET /api/articles/:id', () => {
