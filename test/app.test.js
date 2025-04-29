@@ -164,6 +164,7 @@ describe('endpoints', () => {
           votes: 100,
           article_img_url:
             'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
+          comment_count: 11,
         });
       });
       test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
