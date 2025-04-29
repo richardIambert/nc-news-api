@@ -99,5 +99,39 @@ describe('endpoints', () => {
         expect(body.message).toBe('resource not found');
       });
     });
+    describe('GET /api/articles/:id/comments', () => {
+      test('200: responds with an object having a key of `comments` and value that is an array containing all comments for a given article', async () => {
+        const { statusCode, body } = await request(app).get('/api/articles/1/comments');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('comments');
+        const { comments } = body;
+        expect(Array.isArray(comments)).toBe(true);
+        expect(comments).toHaveLength(11);
+        for (const comment of comments) {
+          expect(comment).toMatchObject({
+            comment_id: expect.any(Number),
+            article_id: expect.any(Number),
+            author: expect.any(String),
+            votes: expect.any(Number),
+            body: expect.any(String),
+            created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+          });
+        }
+        expect(comments[0].comment_id).toBe(5);
+        expect(comments[10].comment_id).toBe(9);
+      });
+      test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
+        const { statusCode, body } = await request(app).get('/api/articles/one/comments');
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message');
+        expect(body.message).toBe('bad request');
+      });
+      test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
+        const { statusCode, body } = await request(app).get('/api/articles/424242/comments');
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message');
+        expect(body.message).toBe('resource not found');
+      });
+    });
   });
 });

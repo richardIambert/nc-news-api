@@ -4,4 +4,10 @@ export const getArticleByIdSchema = Joi.object({
   id: Joi.string()
     .pattern(new RegExp(/^\d{1,}$/))
     .required(),
-});
+}).required();
+
+export const getCommentsByArticleIdSchema = Joi.object({
+  id: Joi.string()
+    .pattern(new RegExp(/^\d{1,}$/))
+    .required(),
+}).required();
