@@ -44,8 +44,8 @@
     }
   },
   "GET /api/articles/:id/comments": {
-    "description": "returns an array of all comments for a given article id, ordered by creation date",
-    "queries": [],
+    "description": "Returns an array of comments. By default, the result is paginated and returns the first ten comments for a given article sorted by creation date in descending order",
+    "queries": ["limit", "p"],
     "exampleResponse": {
       "comments": [
         {

@@ -33,11 +33,11 @@ export const getArticleById = withTryCatch(async (request, response, next) => {
 });
 
 export const getCommentsByArticleId = withTryCatch(async (request, response, next) => {
-  const { error } = getCommentsByArticleIdSchema.validate(request.params);
+  const { error } = getCommentsByArticleIdSchema.validate({ ...request.params, ...request.query });
   if (error) throw new APIError(400, 'bad request');
   const article = await selectArticleById(request.params.id);
   if (!article) throw new APIError(404, 'resource not found');
-  const comments = await selectCommentsByArticleId(request.params.id);
+  const comments = await selectCommentsByArticleId(request.params.id, request.query);
   return response.status(200).json({ comments });
 });
 

@@ -18,6 +18,8 @@ export const getCommentsByArticleIdSchema = Joi.object({
   id: Joi.string()
     .pattern(new RegExp(/^\d{1,}$/))
     .required(),
+  limit: Joi.string().pattern(new RegExp(/^\d+$/)),
+  p: Joi.string().pattern(new RegExp(/^\d+$/)),
 }).required();
 
 export const postCommentByArticleIdSchema = Joi.object({

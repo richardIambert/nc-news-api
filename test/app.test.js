@@ -215,7 +215,7 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('comments');
         const { comments } = body;
         expect(Array.isArray(comments)).toBe(true);
-        expect(comments).toHaveLength(11);
+        expect(comments).toHaveLength(10);
         for (const comment of comments) {
           expect(comment).toMatchObject({
             comment_id: expect.any(Number),
@@ -227,7 +227,38 @@ describe('endpoints', () => {
           });
         }
         expect(comments[0].comment_id).toBe(5);
-        expect(comments[10].comment_id).toBe(9);
+        expect(comments[9].comment_id).toBe(4);
+      });
+      test('200: response is paginated and returns the first 10 comments by default ', async () => {
+        const { statusCode, body } = await request(app).get('/api/articles/1/comments');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('comments');
+        const { comments } = body;
+        expect(Array.isArray(comments)).toBe(true);
+        expect(comments).toHaveLength(10);
+        for (const comment of comments) {
+          expect(comment).toMatchObject({
+            comment_id: expect.any(Number),
+            article_id: expect.any(Number),
+            author: expect.any(String),
+            votes: expect.any(Number),
+            body: expect.any(String),
+            created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+          });
+        }
+        expect(comments[0].comment_id).toBe(5);
+        expect(comments[9].comment_id).toBe(4);
+      });
+      test('200: response is paginated and returns the correct comments when passed `limit` and `p` query parameters', async () => {
+        const firstPage = await request(app).get('/api/articles/1/comments?limit=10&p=0');
+        expect(firstPage.statusCode).toBe(200);
+        expect(firstPage.body.comments).toHaveLength(10);
+        expect(firstPage.body.comments[0].comment_id).toBe(5);
+        expect(firstPage.body.comments[9].comment_id).toBe(4);
+        const secondPage = await request(app).get('/api/articles/1/comments?limit=10&p=1');
+        expect(secondPage.statusCode).toBe(200);
+        expect(secondPage.body.comments).toHaveLength(1);
+        expect(secondPage.body.comments[0].comment_id).toBe(9);
       });
       test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
         const { statusCode, body } = await request(app).get('/api/articles/one/comments');
