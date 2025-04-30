@@ -10,8 +10,8 @@
     }
   },
   "GET /api/articles": {
-    "description": "returns an array of all articles sorted by creation date in descending order by default",
-    "queries": ["sort_by", "order", "topic"],
+    "description": "Returns an array of articles. By default, the result is paginated and returns the first ten articles sorted by creation date in descending order.",
+    "queries": ["sort_by", "order", "topic", "limit", "p"],
     "exampleResponse": {
       "articles": [
         {

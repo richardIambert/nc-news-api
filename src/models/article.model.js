@@ -2,8 +2,8 @@ import format from 'pg-format';
 import db from '../database/connection.js';
 
 export const selectArticlesWhere = async (query) => {
-  const { topic, sort_by, order } = query;
-  const topicEquals = topic ? '%L' : '%s';
+  const { topic = 'topic', sort_by = 'created_at', order = 'DESC', limit = 10, p = 0 } = query;
+  const topicEquals = topic !== 'topic' ? '%L' : '%s';
   const { rows: articles } = await db.query(
     format(
       `
@@ -24,11 +24,17 @@ export const selectArticlesWhere = async (query) => {
         GROUP BY
           a.article_id
         ORDER BY
-          %I %s;
+          %I %s
+        LIMIT
+          %L
+        OFFSET
+          %L;
       `,
-      topic || 'topic',
-      sort_by || 'created_at',
-      order || 'DESC'
+      topic,
+      sort_by,
+      order,
+      limit,
+      limit * p
     )
   );
   return articles;

@@ -68,3 +68,7 @@ jspm_packages/
 
 # Commit guard files
 _/
+
+# SQL test files
+output.txt
+query.sql
