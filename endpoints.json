@@ -77,6 +77,30 @@
       }
     }
   },
+  "POST /api/articles": {
+    "description": "creates a new article",
+    "queries": [],
+    "body": {
+      "author": "butter_bridge",
+      "title": "Who is Mitch?",
+      "body": "The man behind the legend that is Mitch",
+      "topic": "mitch",
+      "article_img_url": "https://example.com/api/assets/imgaes/articles/article.jpg"
+    },
+    "exampleResponse": {
+      "article": {
+        "article_id": 1,
+        "author": "butter_bridge",
+        "title": "Who is Mitch?",
+        "body": "The man behind the legend that is Mitch",
+        "topic": "mitch",
+        "votes": 0,
+        "comment_count": 0,
+        "created_at": "2018-05-30T15:59:13.341Z",
+        "article_img_url": "https://example.com/api/assets/imgaes/articles/article.jpg"
+      }
+    }
+  },
   "PATCH /api/articles/:id": {
     "description": "updates an article with a given id",
     "queries": [],

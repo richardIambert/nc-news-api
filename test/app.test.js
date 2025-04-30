@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterAll, beforeEach, describe, expect, test } from 'vitest';
 import db from '../src/database/connection.js';
 import seed from '../src/database/seeds/seed.js';
 import data from '../src/database/data/test-data/index.js';
@@ -7,6 +7,7 @@ import app from '../src/app.js';
 import endpointsJSON from '../endpoints.json';
 
 beforeEach(() => seed(data));
+afterAll(() => db.end());
 
 describe('error conditions', () => {
   describe('resource not found', () => {
@@ -307,6 +308,97 @@ describe('endpoints', () => {
         expect(statusCode).toBe(404);
         expect(body).toHaveProperty('message', 'resource not found');
       });
+    });
+    describe('POST /api/articles', () => {
+      test('201: responds with with an object having a key of `article` and value that is an object representing the newly created article', async () => {
+        const { statusCode, body } = await request(app).post('/api/articles').send({
+          author: 'butter_bridge',
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+          article_img_url: '/path/to/image/of/mitch/with/one/of/those/balck/strips/across/his/eyes',
+        });
+        expect(statusCode).toBe(201);
+        expect(body).toHaveProperty('article');
+        const { article } = body;
+        expect(article).toMatchObject({
+          article_id: expect.any(Number),
+          title: 'Who is Mitch?',
+          topic: 'mitch',
+          author: 'butter_bridge',
+          body: 'The man behind the legend that is Mitch',
+          created_at: expect.any(String),
+          votes: 0,
+          comment_count: 0,
+          article_img_url: '/path/to/image/of/mitch/with/one/of/those/balck/strips/across/his/eyes',
+        });
+      });
+      test('201: newly created article has the default `article_img_url` value if not present in request body', async () => {
+        const {
+          statusCode,
+          body: { article },
+        } = await request(app).post('/api/articles').send({
+          author: 'butter_bridge',
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+        });
+        expect(statusCode).toBe(201);
+        expect(article).toHaveProperty('article_img_url', '/assets/placeholder/article.jpg');
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid request body", async () => {
+        const empty = {};
+        const missingProperty = {
+          // author missing
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+        };
+        const invalidPropertyValue = {
+          author: 1, // should be string
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+        };
+        const { statusCode: statusCode1, body: body1 } = await request(app)
+          .post('/api/articles')
+          .send(empty);
+        expect(statusCode1).toBe(400);
+        expect(body1).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode2, body: body2 } = await request(app)
+          .post('/api/articles')
+          .send(missingProperty);
+        expect(statusCode2).toBe(400);
+        expect(body2).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode3, body: body3 } = await request(app)
+          .post('/api/articles')
+          .send(invalidPropertyValue);
+        expect(statusCode3).toBe(400);
+        expect(body3).toHaveProperty('message', 'bad request');
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when attempting to create an article with an author (user) that doesn't exist", async () => {
+        const { statusCode, body } = await request(app).post('/api/articles').send({
+          author: 'userdoesntexist',
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+        });
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when attempting to create an article with a topic that doesn't exist", async () => {
+        const { statusCode, body } = await request(app).post('/api/articles').send({
+          author: 'butter_bridge',
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'topicdoesntexist',
+        });
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test.todo(
+        "422: responds with a 422 status and a message of 'article already exists' if an article already exists with same title and author"
+      );
     });
   });
   describe('comments', () => {
