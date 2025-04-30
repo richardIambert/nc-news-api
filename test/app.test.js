@@ -54,7 +54,7 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('articles'); // does response body have an articles property?
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true); // is the articles property and array?
-        expect(articles).toHaveLength(13); // does the array contain all article records?
+        expect(articles).toHaveLength(10); // does the array contain all article records?
         for (const article of articles) {
           expect(article).not.toHaveProperty('body'); // for each article is the body field excluded?
           expect(article).toMatchObject({
@@ -69,9 +69,9 @@ describe('endpoints', () => {
           });
         }
         expect(articles[0].article_id).toBe(3); // check the articles are arranged in date descending order
-        expect(articles[12].article_id).toBe(7);
-        expect(articles[12].comment_count).toBe(0); // check the comment counts are correct
-        expect(articles[0].comment_count).toBe(2);
+        expect(articles[9].article_id).toBe(4);
+        expect(articles[0].comment_count).toBe(2); // check the comment counts are correct
+        expect(articles[9].comment_count).toBe(0);
       });
       test('200: query string can sort `articles` by author in ascending order', async () => {
         const { statusCode, body } = await request(app).get(
@@ -81,9 +81,9 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
-        expect(articles).toHaveLength(13);
+        expect(articles).toHaveLength(10);
         expect(articles[0].article_id).toBe(1);
-        expect(articles[12].article_id).toBe(5);
+        expect(articles[9].article_id).toBe(8);
       });
       test('200: query string can sort `articles` by title in ascending order', async () => {
         const { statusCode, body } = await request(app).get(
@@ -93,9 +93,9 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
-        expect(articles).toHaveLength(13);
+        expect(articles).toHaveLength(10);
         expect(articles[0].article_id).toBe(6);
-        expect(articles[12].article_id).toBe(7);
+        expect(articles[9].article_id).toBe(4);
       });
       test('200: query string can sort `articles` by topic in ascending order', async () => {
         const { statusCode, body } = await request(app).get(
@@ -105,9 +105,9 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
-        expect(articles).toHaveLength(13);
+        expect(articles).toHaveLength(10);
         expect(articles[0].article_id).toBe(5);
-        expect(articles[12].article_id).toBe(11);
+        expect(articles[9].article_id).toBe(2);
       });
       test('200: query string can sort `articles` by vote in ascending order', async () => {
         const { statusCode, body } = await request(app).get(
@@ -117,9 +117,9 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
-        expect(articles).toHaveLength(13);
+        expect(articles).toHaveLength(10);
         expect(articles[0].article_id).toBe(11);
-        expect(articles[12].article_id).toBe(1);
+        expect(articles[9].article_id).toBe(5);
       });
       test('200: query string can sort `articles` by comment_count in ascending order', async () => {
         const { statusCode, body } = await request(app).get(
@@ -129,9 +129,9 @@ describe('endpoints', () => {
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
-        expect(articles).toHaveLength(13);
+        expect(articles).toHaveLength(10);
         expect(articles[0].article_id).toBe(4);
-        expect(articles[12].article_id).toBe(1);
+        expect(articles[9].article_id).toBe(9);
       });
       test('200: query string can select `articles` by topic', async () => {
         const { statusCode, body } = await request(app).get('/api/articles?topic=cats');
@@ -140,6 +140,25 @@ describe('endpoints', () => {
         const { articles } = body;
         expect(articles).toHaveLength(1);
         expect(articles[0].article_id).toBe(5);
+      });
+      test('200: response is paginated and returns the first 10 articles by default', async () => {
+        const { statusCode, body } = await request(app).get('/api/articles');
+        expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('articles');
+        const { articles } = body;
+        expect(articles).toHaveLength(10);
+        expect(articles[0].article_id).toBe(3);
+        expect(articles[9].article_id).toBe(4);
+      });
+      test('200: response is paginated and returns the correct articles when passed `limit` and `p` query parameters', async () => {
+        const firstPage = await request(app).get('/api/articles?limit=10&p=0');
+        expect(firstPage.body.articles).toHaveLength(10);
+        expect(firstPage.body.articles[0].article_id).toBe(3);
+        expect(firstPage.body.articles[9].article_id).toBe(4);
+        const secondPage = await request(app).get('/api/articles?limit=10&p=1');
+        expect(secondPage.body.articles).toHaveLength(3);
+        expect(secondPage.body.articles[0].article_id).toBe(8);
+        expect(secondPage.body.articles[2].article_id).toBe(7);
       });
       test("400: responds with a 400 status and message of 'bad request' when passed an invalid query string", async () => {
         const { statusCode, body } = await request(app).get(

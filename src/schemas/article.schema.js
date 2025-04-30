@@ -4,6 +4,8 @@ export const getArticlesSchema = Joi.object({
   sort_by: Joi.string().valid('author', 'comment_count', 'title', 'topic', 'votes'),
   order: Joi.string().valid('asc', 'desc'),
   topic: Joi.string().valid('cats', 'coding', 'cooking', 'football', 'mitch', 'paper'), // TODO: This would need to be updated dynamically as new topics are added.
+  limit: Joi.string().pattern(new RegExp(/^\d+$/)),
+  p: Joi.string().pattern(new RegExp(/^\d+$/)),
 });
 
 export const getArticleByIdSchema = Joi.object({
