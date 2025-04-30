@@ -310,20 +310,77 @@ describe('endpoints', () => {
     });
   });
   describe('comments', () => {
-    test('204: responds with a status of 204 and an empty response body having successfully deleted a comment with a given `id`', async () => {
-      const { statusCode, body } = await request(app).delete('/api/comments/1');
-      expect(statusCode).toBe(204);
-      expect(body).toEqual({});
+    describe('PATCH /api/comments/:id', () => {
+      test('200: responds with with an object having a key of `article` and value that is an object representing the updated article', async () => {
+        const { statusCode: statusCode1, body: body1 } = await request(app)
+          .patch('/api/comments/1')
+          .send({
+            inc_votes: 1,
+          });
+        expect(statusCode1).toBe(200);
+        expect(body1).toHaveProperty('comment');
+        expect(body1.comment).toHaveProperty('votes', 17);
+        const { statusCode: statusCode2, body: body2 } = await request(app)
+          .patch('/api/comments/1')
+          .send({
+            inc_votes: -1,
+          });
+        expect(statusCode2).toBe(200);
+        expect(body2).toHaveProperty('comment');
+        expect(body2.comment).toHaveProperty('votes', 16);
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `id` parameter", async () => {
+        const { statusCode, body } = await request(app).patch('/api/comments/one').send({
+          inc_votes: 1,
+        });
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid request body", async () => {
+        const { statusCode: statusCode1, body: body1 } = await request(app)
+          .patch('/api/comments/1')
+          .send({
+            inc_votes: 'one', // strings not allowed
+          });
+        expect(statusCode1).toBe(400);
+        expect(body1).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode2, body: body2 } = await request(app)
+          .patch('/api/comments/1')
+          .send({
+            inc_votes: 1.1, // decimals not allowed
+          });
+        expect(statusCode2).toBe(400);
+        expect(body2).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode3, body: body3 } = await request(app)
+          .patch('/api/comments/1')
+          .send({}); // empty request body not allowed
+        expect(statusCode3).toBe(400);
+        expect(body3).toHaveProperty('message', 'bad request');
+      });
+      test("404: responds with a 404 status and a message of 'resource not found' when no article exists with given `id`", async () => {
+        const { statusCode, body } = await request(app).patch('/api/comments/424242').send({
+          inc_votes: 1,
+        });
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message', 'resource not found');
+      });
     });
-    test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `id` parameter", async () => {
-      const { statusCode, body } = await request(app).delete('/api/comments/one');
-      expect(statusCode).toBe(400);
-      expect(body).toHaveProperty('message', 'bad request');
-    });
-    test("404: responds with a 404 status and a message of 'resource not found' when no article exists with given `id`", async () => {
-      const { statusCode, body } = await request(app).delete('/api/comments/4242424');
-      expect(statusCode).toBe(404);
-      expect(body).toHaveProperty('message', 'resource not found');
+    describe('DELETE /api/comments/:id', () => {
+      test('204: responds with a status of 204 and an empty response body having successfully deleted a comment with a given `id`', async () => {
+        const { statusCode, body } = await request(app).delete('/api/comments/1');
+        expect(statusCode).toBe(204);
+        expect(body).toEqual({});
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `id` parameter", async () => {
+        const { statusCode, body } = await request(app).delete('/api/comments/one');
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+      test("404: responds with a 404 status and a message of 'resource not found' when no article exists with given `id`", async () => {
+        const { statusCode, body } = await request(app).delete('/api/comments/4242424');
+        expect(statusCode).toBe(404);
+        expect(body).toHaveProperty('message', 'resource not found');
+      });
     });
   });
   describe('users', () => {
