@@ -20,7 +20,7 @@ export const selectArticlesWhere = async (query) => {
           articles AS a
           LEFT JOIN comments AS c ON a.article_id = c.article_id
         WHERE
-          topic = ${topicEquals}
+          a.topic = ${topicEquals}
         GROUP BY
           a.article_id
         ORDER BY
@@ -114,4 +114,21 @@ export const updateArticleById = async (id, update) => {
     [inc_votes, id]
   );
   return rows[0];
+};
+
+// TODO: Maybe set `article_img_url` default at on database instead.
+export const insertArticle = async (article) => {
+  const { author, title, body, topic, article_img_url } = article;
+  const { rows: articles } = await db.query(
+    `
+      INSERT INTO
+        articles (author, title, body, topic, article_img_url)
+      VALUES
+        ($1, $2, $3, $4, $5)
+      RETURNING
+        *;
+    `,
+    [author, title, body, topic, article_img_url || '/assets/placeholder/article.jpg']
+  );
+  return { ...articles[0], comment_count: 0 };
 };
