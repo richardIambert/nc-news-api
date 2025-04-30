@@ -21,7 +21,7 @@ export const getArticles = withTryCatch(async (request, response, next) => {
   const { error } = getArticlesSchema.validate(request.query);
   if (error) throw new APIError(400, 'bad request');
   const articles = await selectArticlesWhere(request.query);
-  return response.status(200).json({ articles });
+  return response.status(200).json({ articles, total_count: articles.length });
 });
 
 export const getArticleById = withTryCatch(async (request, response, next) => {
