@@ -16,12 +16,13 @@ cd nc-news-api
 ```bash
 npm install
 ```
+> [!NOTE]
+> `nc-news-api` requires node version `23`
 
 > [!NOTE]
 > `nc-news-api` requires the following minimum dependency versions:
 > | package | version |
 > | --------- | --------- |
-> | node | `23` |
 > | dotenv | `6.5.0` |
 > | express | `5.1.0` |
 > | joi | `17.13.3` |
