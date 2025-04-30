@@ -51,6 +51,7 @@ describe('endpoints', () => {
       test('200: responds with an object having a key of `articles` and a value that is an array containing all articles', async () => {
         const { statusCode, body } = await request(app).get('/api/articles');
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles'); // does response body have an articles property?
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true); // is the articles property and array?
@@ -78,6 +79,7 @@ describe('endpoints', () => {
           '/api/articles?sort_by=author&order=asc'
         );
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
@@ -90,6 +92,7 @@ describe('endpoints', () => {
           '/api/articles?sort_by=title&order=asc'
         );
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
@@ -102,6 +105,7 @@ describe('endpoints', () => {
           '/api/articles?sort_by=topic&order=asc'
         );
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
@@ -114,6 +118,7 @@ describe('endpoints', () => {
           '/api/articles?sort_by=votes&order=asc'
         );
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
@@ -126,6 +131,7 @@ describe('endpoints', () => {
           '/api/articles?sort_by=comment_count&order=asc'
         );
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
@@ -136,6 +142,7 @@ describe('endpoints', () => {
       test('200: query string can select `articles` by topic', async () => {
         const { statusCode, body } = await request(app).get('/api/articles?topic=cats');
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 1);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(articles).toHaveLength(1);
@@ -144,6 +151,7 @@ describe('endpoints', () => {
       test('200: response is paginated and returns the first 10 articles by default', async () => {
         const { statusCode, body } = await request(app).get('/api/articles');
         expect(statusCode).toBe(200);
+        expect(body).toHaveProperty('total_count', 10);
         expect(body).toHaveProperty('articles');
         const { articles } = body;
         expect(articles).toHaveLength(10);
@@ -152,10 +160,12 @@ describe('endpoints', () => {
       });
       test('200: response is paginated and returns the correct articles when passed `limit` and `p` query parameters', async () => {
         const firstPage = await request(app).get('/api/articles?limit=10&p=0');
+        expect(firstPage.body).toHaveProperty('total_count', 10);
         expect(firstPage.body.articles).toHaveLength(10);
         expect(firstPage.body.articles[0].article_id).toBe(3);
         expect(firstPage.body.articles[9].article_id).toBe(4);
         const secondPage = await request(app).get('/api/articles?limit=10&p=1');
+        expect(secondPage.body).toHaveProperty('total_count', 3);
         expect(secondPage.body.articles).toHaveLength(3);
         expect(secondPage.body.articles[0].article_id).toBe(8);
         expect(secondPage.body.articles[2].article_id).toBe(7);
