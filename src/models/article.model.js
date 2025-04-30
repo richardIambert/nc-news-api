@@ -66,7 +66,8 @@ export const selectArticleById = async (id) => {
   return rows[0];
 };
 
-export const selectCommentsByArticleId = async (id) => {
+export const selectCommentsByArticleId = async (id, query) => {
+  const { limit = 10, p = 0 } = query;
   const { rows: comments } = await db.query(
     `
       SELECT
@@ -81,9 +82,13 @@ export const selectCommentsByArticleId = async (id) => {
       WHERE
         article_id = $1
       ORDER BY
-        created_at DESC;
+        created_at DESC
+      LIMIT
+        $2
+      OFFSET
+        $3; 
     `,
-    [id]
+    [id, limit, limit * p]
   );
   return comments;
 };
