@@ -220,26 +220,26 @@ describe('/api/articles', () => {
       const { statusCode, body } = await request(app).get('/api/articles');
       expect(statusCode).toBe(200);
       expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles'); // does response body have an articles property?
+      expect(body).toHaveProperty('articles');
       const { articles } = body;
-      expect(Array.isArray(articles)).toBe(true); // is the articles property and array?
-      expect(articles).toHaveLength(10); // does the array contain all article records?
+      expect(Array.isArray(articles)).toBe(true);
+      expect(articles).toHaveLength(10);
       for (const article of articles) {
-        expect(article).not.toHaveProperty('body'); // for each article is the body field excluded?
+        expect(article).not.toHaveProperty('body');
         expect(article).toMatchObject({
           article_id: expect.any(Number),
           title: expect.any(String),
           topic: expect.any(String),
           author: expect.any(String),
-          created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+          created_at: expect.any(String),
           votes: expect.any(Number),
           article_img_url: expect.any(String),
           comment_count: expect.any(Number),
         });
       }
-      expect(articles[0].article_id).toBe(3); // check the articles are arranged in date descending order
+      expect(articles[0].article_id).toBe(3);
       expect(articles[9].article_id).toBe(4);
-      expect(articles[0].comment_count).toBe(2); // check the comment counts are correct
+      expect(articles[0].comment_count).toBe(2);
       expect(articles[9].comment_count).toBe(0);
     });
     test('200: query string can sort `articles` by author in ascending order', async () => {
@@ -350,7 +350,7 @@ describe('/api/articles', () => {
         topic: 'mitch',
         author: 'butter_bridge',
         body: 'I find this existence challenging',
-        created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+        created_at: expect.any(String),
         votes: 100,
         article_img_url:
           'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
@@ -381,7 +381,7 @@ describe('/api/articles', () => {
         topic: 'mitch',
         author: 'butter_bridge',
         body: 'I find this existence challenging',
-        created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+        created_at: expect.any(String),
         votes: 0,
         article_img_url:
           'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
@@ -446,7 +446,7 @@ describe('/api/articles', () => {
 // ====================================
 
 describe('/api/comments', () => {
-  describe('POST /api/articles/:id/comments (CREATE)', () => {
+  describe('POST /api/articles/:id/comments (CREATE ONE)', () => {
     test('201: responds with with an object having a key of `comment` and value that is an object representing the newly created comment', async () => {
       const { statusCode, body } = await request(app).post('/api/articles/1/comments').send({
         username: 'butter_bridge',
@@ -461,7 +461,7 @@ describe('/api/comments', () => {
         author: 'butter_bridge',
         votes: 0,
         body: "I can't read this article! Where are my glasses!?",
-        created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+        created_at: expect.any(String),
       });
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
@@ -493,6 +493,14 @@ describe('/api/comments', () => {
       expect(statusCode3).toBe(400);
       expect(body3).toHaveProperty('message', 'bad request');
     });
+    test("400: responds with a 400 status and message of 'bad request' when no user exists with the comment's author name", async () => {
+      const { statusCode, body } = await request(app).post('/api/articles/1/comments').send({
+        username: 'userdoesntexist',
+        body: "I can't read this article! Where are my glasses!?",
+      });
+      expect(statusCode).toBe(400);
+      expect(body).toHaveProperty('message', 'bad request');
+    });
     test("404: responds with a 404 status and message of 'resource not found' when no article exists with given `id`", async () => {
       const { statusCode, body } = await request(app).post('/api/articles/424242/comments').send({
         username: 'butter_bridge',
@@ -501,9 +509,6 @@ describe('/api/comments', () => {
       expect(statusCode).toBe(404);
       expect(body).toHaveProperty('message', 'resource not found');
     });
-    test.todo(
-      "404: responds with a 404 status and message of 'resource not found' when no user exists with the comment's author name"
-    ); // TODO: account for potential 400 when trying to post a comment with a username that doesn't exist
   });
   describe('GET /api/articles/:id/comments (READ ALL)', () => {
     test('200: responds with an object having a key of `comments` and value that is an array containing all comments for a given article', async () => {
@@ -520,7 +525,7 @@ describe('/api/comments', () => {
           author: expect.any(String),
           votes: expect.any(Number),
           body: expect.any(String),
-          created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+          created_at: expect.any(String),
         });
       }
       expect(comments[0].comment_id).toBe(5);
@@ -540,7 +545,7 @@ describe('/api/comments', () => {
           author: expect.any(String),
           votes: expect.any(Number),
           body: expect.any(String),
-          created_at: expect.any(String), // TODO: research `expect.stringMatching()`
+          created_at: expect.any(String),
         });
       }
       expect(comments[0].comment_id).toBe(5);
