@@ -2,9 +2,9 @@ import { afterAll, beforeEach, describe, expect, test } from 'vitest';
 import db from '../src/database/connection.js';
 import seed from '../src/database/seeds/seed.js';
 import data from '../src/database/data/test-data/index.js';
+import endpointsJSON from '../endpoints.json';
 import request from 'supertest';
 import app from '../src/app.js';
-import endpointsJSON from '../endpoints.json';
 
 beforeEach(() => seed(data));
 afterAll(() => db.end());

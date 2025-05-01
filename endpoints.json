@@ -2,13 +2,6 @@
   "GET /api": {
     "description": "returns a json representation of all the available endpoints of the api"
   },
-  "GET /api/topics": {
-    "description": "returns an array of all topics",
-    "queries": [],
-    "exampleResponse": {
-      "topics": [{ "slug": "football", "description": "Footie!" }]
-    }
-  },
   "POST /api/topics": {
     "description": "creates a new topic",
     "queries": [],
@@ -22,6 +15,37 @@
         "slug": "jokes",
         "description": "not mean, keep it clean",
         "img_url": "/assets/img/topics/jokes.jpg"
+      }
+    }
+  },
+  "GET /api/topics": {
+    "description": "returns an array of all topics",
+    "queries": [],
+    "exampleResponse": {
+      "topics": [{ "slug": "football", "description": "Footie!" }]
+    }
+  },
+  "POST /api/articles": {
+    "description": "creates a new article",
+    "queries": [],
+    "body": {
+      "author": "butter_bridge",
+      "title": "Who is Mitch?",
+      "body": "The man behind the legend that is Mitch",
+      "topic": "mitch",
+      "article_img_url": "https://example.com/api/assets/imgaes/articles/article.jpg"
+    },
+    "exampleResponse": {
+      "article": {
+        "article_id": 1,
+        "author": "butter_bridge",
+        "title": "Who is Mitch?",
+        "body": "The man behind the legend that is Mitch",
+        "topic": "mitch",
+        "votes": 0,
+        "comment_count": 0,
+        "created_at": "2018-05-30T15:59:13.341Z",
+        "article_img_url": "https://example.com/api/assets/imgaes/articles/article.jpg"
       }
     }
   },
@@ -59,64 +83,6 @@
       }
     }
   },
-  "GET /api/articles/:id/comments": {
-    "description": "Returns an array of comments. By default, the result is paginated and returns the first ten comments for a given article sorted by creation date in descending order",
-    "queries": ["limit", "p"],
-    "exampleResponse": {
-      "comments": [
-        {
-          "comment_id": 1,
-          "article_id": 1,
-          "author": "butter_bridge",
-          "votes": 16,
-          "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
-          "created_at": "2018-05-30T15:59:13.341Z"
-        }
-      ]
-    }
-  },
-  "POST /api/articles/:id/comments": {
-    "description": "creates a new comment for a given article id",
-    "queries": [],
-    "body": {
-      "username": "butter_bridge",
-      "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!"
-    },
-    "exampleResponse": {
-      "comment": {
-        "comment_id": 1,
-        "article_id": 1,
-        "author": "butter_bridge",
-        "votes": 0,
-        "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
-        "created_at": "2018-05-30T15:59:13.341Z"
-      }
-    }
-  },
-  "POST /api/articles": {
-    "description": "creates a new article",
-    "queries": [],
-    "body": {
-      "author": "butter_bridge",
-      "title": "Who is Mitch?",
-      "body": "The man behind the legend that is Mitch",
-      "topic": "mitch",
-      "article_img_url": "https://example.com/api/assets/imgaes/articles/article.jpg"
-    },
-    "exampleResponse": {
-      "article": {
-        "article_id": 1,
-        "author": "butter_bridge",
-        "title": "Who is Mitch?",
-        "body": "The man behind the legend that is Mitch",
-        "topic": "mitch",
-        "votes": 0,
-        "comment_count": 0,
-        "created_at": "2018-05-30T15:59:13.341Z",
-        "article_img_url": "https://example.com/api/assets/imgaes/articles/article.jpg"
-      }
-    }
-  },
   "PATCH /api/articles/:id": {
     "description": "updates an article with a given id",
     "queries": [],
@@ -138,6 +104,40 @@
     "description": "deletes an article with a given id",
     "queries": [],
     "exampleResponse": {}
+  },
+  "POST /api/articles/:id/comments": {
+    "description": "creates a new comment for a given article id",
+    "queries": [],
+    "body": {
+      "username": "butter_bridge",
+      "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!"
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 1,
+        "article_id": 1,
+        "author": "butter_bridge",
+        "votes": 0,
+        "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        "created_at": "2018-05-30T15:59:13.341Z"
+      }
+    }
+  },
+  "GET /api/articles/:id/comments": {
+    "description": "Returns an array of comments. By default, the result is paginated and returns the first ten comments for a given article sorted by creation date in descending order",
+    "queries": ["limit", "p"],
+    "exampleResponse": {
+      "comments": [
+        {
+          "comment_id": 1,
+          "article_id": 1,
+          "author": "butter_bridge",
+          "votes": 16,
+          "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+          "created_at": "2018-05-30T15:59:13.341Z"
+        }
+      ]
+    }
   },
   "PATCH /api/comments/:id": {
     "description": "updates a comment with a given id",
