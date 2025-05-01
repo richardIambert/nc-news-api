@@ -1,5 +1,6 @@
 import { APIError, withTryCatch } from '../utilities/index.js';
 import {
+  deleteArticleByIdSchema,
   getArticleByIdSchema,
   getArticlesSchema,
   getCommentsByArticleIdSchema,
@@ -14,6 +15,7 @@ import {
   insertCommentByArticleId,
   updateArticleById,
   insertArticle,
+  deleteArticle,
 } from '../models/article.model.js';
 import { selectUserByUsername } from '../models/user.model.js';
 import { selectTopicBySlug } from '../models/topic.model.js';
@@ -86,4 +88,12 @@ export const postArticle = withTryCatch(async (request, response, next) => {
   if (!topic) throw new APIError(400, 'bad request'); // Throw if article topic doesn't exist.
   const article = await insertArticle(request.body);
   return response.status(201).json({ article });
+});
+
+export const deleteArticleById = withTryCatch(async (request, response, next) => {
+  const { error } = deleteArticleByIdSchema.validate(request.params);
+  if (error) throw new APIError(400, 'bad request');
+  const article = await deleteArticle(request.params.id);
+  if (!article) throw new APIError(404, 'resource not found');
+  return response.status(204).end();
 });

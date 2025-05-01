@@ -143,3 +143,18 @@ export const insertArticle = async (article) => {
   );
   return { ...articles[0], comment_count: 0 };
 };
+
+export const deleteArticle = async (id) => {
+  const { rows: articles } = await db.query(
+    `
+      DELETE FROM
+        articles
+      WHERE
+        article_id = $1
+      RETURNING
+       *;
+    `,
+    [id]
+  );
+  return articles[0];
+};

@@ -74,7 +74,7 @@ const seed = async ({ topicData, userData, articleData, commentData }) => {
     [
       'comment_id SERIAL PRIMARY KEY',
       'article_id INT',
-      'FOREIGN KEY (article_id) REFERENCES articles(article_id)',
+      'FOREIGN KEY (article_id) REFERENCES articles(article_id) ON DELETE CASCADE',
       'body TEXT NOT NULL',
       'votes INT DEFAULT 0',
       'author VARCHAR(255)',

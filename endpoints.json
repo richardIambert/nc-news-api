@@ -134,6 +134,11 @@
       }
     }
   },
+  "DELETE /api/articles/:id": {
+    "description": "deletes an article with a given id",
+    "queries": [],
+    "exampleResponse": {}
+  },
   "PATCH /api/comments/:id": {
     "description": "updates a comment with a given id",
     "queries": [],
