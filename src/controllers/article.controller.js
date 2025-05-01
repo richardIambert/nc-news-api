@@ -16,10 +16,15 @@ import {
   insertArticle,
 } from '../models/article.model.js';
 import { selectUserByUsername } from '../models/user.model.js';
+import { selectTopicBySlug } from '../models/topic.model.js';
 
 export const getArticles = withTryCatch(async (request, response, next) => {
   const { error } = getArticlesSchema.validate(request.query);
   if (error) throw new APIError(400, 'bad request');
+  if (request.query.topic) {
+    const topic = await selectTopicBySlug(request.query.topic);
+    if (!topic) throw new APIError(400, 'bad request');
+  }
   const articles = await selectArticlesWhere(request.query);
   return response.status(200).json({ articles, total_count: articles.length });
 });
@@ -74,9 +79,11 @@ export const postArticle = withTryCatch(async (request, response, next) => {
   // TODO: Do we want users to be able to create and article if it has the same author (user) and title as an existing article.
   const { error } = postArticleSchema.validate(request.body);
   if (error) throw new APIError(400, 'bad request'); // Throw if req.body is invalid, including topic doesn't exist.
-  const { author } = request.body;
-  const user = await selectUserByUsername(author);
+  const { author: username, topic: slug } = request.body;
+  const user = await selectUserByUsername(username);
   if (!user) throw new APIError(400, 'bad request'); // Throw if article is author doesn't exist.
+  const topic = await selectTopicBySlug(slug);
+  if (!topic) throw new APIError(400, 'bad request'); // Throw if article topic doesn't exist.
   const article = await insertArticle(request.body);
   return response.status(201).json({ article });
 });

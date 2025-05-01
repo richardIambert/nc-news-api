@@ -45,6 +45,65 @@ describe('endpoints', () => {
         }
       });
     });
+    describe('POST /api/topics', () => {
+      test('201: responds with with an object having a key of `topic` and value that is an object representing the newly created topic', async () => {
+        const { statusCode, body } = await request(app).post('/api/topics').send({
+          slug: 'jokes',
+          description: 'not mean, keep it clean',
+          img_url: '/assets/img/topics/jokes.jpg',
+        });
+        expect(statusCode).toBe(201);
+        expect(body).toHaveProperty('topic');
+        expect(body.topic).toMatchObject({
+          slug: 'jokes',
+          description: 'not mean, keep it clean',
+          img_url: '/assets/img/topics/jokes.jpg',
+        });
+      });
+      test('201: newly created topic has the default `img_url` value if not present in request body ', async () => {
+        const { statusCode, body } = await request(app).post('/api/topics').send({
+          slug: 'jokes',
+          description: 'not mean, keep it clean',
+        });
+        expect(statusCode).toBe(201);
+        expect(body.topic).toHaveProperty('img_url', '/assets/placeholder/topic.jpg');
+      });
+      test("400: responds with a 400 status and message of 'bad request' when passed an invalid request body", async () => {
+        const empty = {};
+        const missingProperty = {
+          // slug missing
+          description: 'not mean, keep it clean',
+        };
+        const invalidPropertyValue = {
+          slug: 1337, // should be string
+          description: 'not mean, keep it clean',
+        };
+        const { statusCode: statusCode1, body: body1 } = await request(app)
+          .post('/api/topics')
+          .send(empty);
+        expect(statusCode1).toBe(400);
+        expect(body1).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode2, body: body2 } = await request(app)
+          .post('/api/topics')
+          .send(missingProperty);
+        expect(statusCode2).toBe(400);
+        expect(body2).toHaveProperty('message', 'bad request');
+        const { statusCode: statusCode3, body: body3 } = await request(app)
+          .post('/api/topics')
+          .send(invalidPropertyValue);
+        expect(statusCode3).toBe(400);
+        expect(body3).toHaveProperty('message', 'bad request');
+      });
+      test("422: responds with a 422 status and a message of 'topic already exists' if a topic with a matching `slug` value already exists", async () => {
+        const { statusCode, body } = await request(app).post('/api/topics').send({
+          description: 'The man, the Mitch, the legend',
+          slug: 'mitch',
+          img_url: '',
+        });
+        expect(statusCode).toBe(422);
+        expect(body).toHaveProperty('message', 'topic already exists');
+      });
+    });
   });
   describe('articles', () => {
     describe('GET /api/articles', () => {

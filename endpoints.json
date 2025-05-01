@@ -9,6 +9,22 @@
       "topics": [{ "slug": "football", "description": "Footie!" }]
     }
   },
+  "POST /api/topics": {
+    "description": "creates a new topic",
+    "queries": [],
+    "body": {
+      "slug": "jokes",
+      "description": "not mean, keep it clean",
+      "img_url": "/assets/img/topics/jokes.jpg"
+    },
+    "exampleResponse": {
+      "topic": {
+        "slug": "jokes",
+        "description": "not mean, keep it clean",
+        "img_url": "/assets/img/topics/jokes.jpg"
+      }
+    }
+  },
   "GET /api/articles": {
     "description": "Returns an array of articles. By default, the result is paginated and returns the first ten articles sorted by creation date in descending order.",
     "queries": ["sort_by", "order", "topic", "limit", "p"],
