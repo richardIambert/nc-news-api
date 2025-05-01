@@ -519,6 +519,38 @@ describe('endpoints', () => {
         "422: responds with a 422 status and a message of 'article already exists' if an article already exists with same title and author"
       );
     });
+    describe('DELETE /api/articles/:id', () => {
+      test('204: responds with a status of 204 and an empty response body having successfully deleted an article with a given `id`', async () => {
+        const { statusCode, body } = await request(app).delete('/api/articles/1');
+        expect(statusCode).toBe(204);
+        expect(body).toEqual({});
+      });
+      test('204: should delete all associated comments', async () => {
+        const { rows: commentsBeforeDeletion } = await db.query(
+          'SELECT * FROM comments WHERE article_id = 1;'
+        );
+        expect(commentsBeforeDeletion).toHaveLength(11);
+        const { statusCode, body } = await request(app).delete('/api/articles/1');
+        expect(statusCode).toBe(204);
+        expect(body).toEqual({});
+        const { rows: commentsAfterDeletion } = await db.query(
+          'SELECT * FROM comments WHERE article_id = 1;'
+        );
+        expect(commentsAfterDeletion).toHaveLength(0);
+      });
+      test('204: subsequent requests to GET /api/article/:id should return a 404', async () => {
+        const getResponseBeforeDelete = await request(app).get('/api/articles/1');
+        expect(getResponseBeforeDelete.statusCode).toBe(200);
+        await request(app).delete('/api/articles/1');
+        const getResponseAfterDelete = await request(app).get('/api/articles/1');
+        expect(getResponseAfterDelete.statusCode).toBe(404);
+      });
+      test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `id` parameter", async () => {
+        const { statusCode, body } = await request(app).delete('/api/articles/one');
+        expect(statusCode).toBe(400);
+        expect(body).toHaveProperty('message', 'bad request');
+      });
+    });
   });
   describe('comments', () => {
     describe('PATCH /api/comments/:id', () => {

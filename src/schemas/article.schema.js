@@ -46,3 +46,9 @@ export const postArticleSchema = Joi.object({
   topic: Joi.string().min(1).max(255).required(),
   article_img_url: Joi.string().max(1000), // INFO: Max value added to match filed constraint in database. This might need increasing.
 }).required();
+
+export const deleteArticleByIdSchema = Joi.object({
+  id: Joi.string()
+    .pattern(new RegExp(/^\d{1,}$/))
+    .required(),
+}).required();
