@@ -3,7 +3,7 @@ import Joi from 'joi';
 export const getArticlesSchema = Joi.object({
   sort_by: Joi.string().valid('author', 'comment_count', 'title', 'topic', 'votes'),
   order: Joi.string().valid('asc', 'desc'),
-  topic: Joi.string().valid('cats', 'coding', 'cooking', 'football', 'mitch', 'paper'), // TODO: This would need to be updated dynamically as new topics are added.
+  topic: Joi.string().min(1).max(255),
   limit: Joi.string().pattern(new RegExp(/^\d+$/)),
   p: Joi.string().pattern(new RegExp(/^\d+$/)),
 });
@@ -43,6 +43,6 @@ export const postArticleSchema = Joi.object({
     .required(), // INFO: This can be changed to accommodate more valid username characters.
   title: Joi.string().max(255).required(),
   body: Joi.string().required(),
-  topic: Joi.string().valid('cats', 'coding', 'cooking', 'football', 'mitch', 'paper'), // TODO: This would need to be updated dynamically as new topics are added
+  topic: Joi.string().min(1).max(255).required(),
   article_img_url: Joi.string().max(1000), // INFO: Max value added to match filed constraint in database. This might need increasing.
 }).required();

@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { getTopics } from '../controllers/topic.controller.js';
+import { getTopics, postTopic } from '../controllers/topic.controller.js';
 
 const topicRouter = new Router();
 
-topicRouter.route('/').get(getTopics);
+topicRouter.route('/').get(getTopics).post(postTopic);
 
 export default topicRouter;
