@@ -6,14 +6,41 @@ import endpointsJSON from '../endpoints.json';
 import request from 'supertest';
 import app from '../src/app.js';
 
+// ====================================
+//  Custom Matchers
+// ====================================
+
 expect.extend({
   toBeUTCTimestamp(actual) {
     return {
       pass: /^\d{4}-[0-1]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+Z?$/.test(actual),
-      message: `${this.utils.printReceived} is not a valid UTC timestamp`,
+      message: () => `${this.utils.printReceived(actual)} is not a valid UTC timestamp`,
+    };
+  },
+  toBeSorted(actual, options) {
+    const { sort_by, order } = options;
+    const sorted = actual.toSorted((a, b) => {
+      if (order === 'asc') {
+        return a[sort_by] > b[sort_by] ? 1 : a[sort_by] < b[sort_by] ? -1 : 0;
+      } else {
+        return a[sort_by] > b[sort_by] ? -1 : a[sort_by] < b[sort_by] ? 1 : 0;
+      }
+    });
+    console.log(JSON.stringify(actual) === JSON.stringify(sorted));
+    return {
+      pass: JSON.stringify(actual) === JSON.stringify(sorted),
+      message: () =>
+        `${this.utils.printDiffOrStringify(
+          this.utils.printExpected(sorted),
+          this.utils.printReceived(actual)
+        )} is not sorted`,
     };
   },
 });
+
+// ====================================
+//  Test Hooks
+// ====================================
 
 beforeEach(() => seed(data));
 afterAll(() => db.end());
@@ -75,28 +102,23 @@ describe('/api/topics', () => {
       expect(body.topic).toHaveProperty('img_url', '/assets/placeholder/topic.jpg');
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid request body", async () => {
-      const empty = {};
-      const missingProperty = {
-        // slug missing
-        description: 'not mean, keep it clean',
-      };
-      const invalidPropertyValue = {
-        slug: 1337, // should be string
-        description: 'not mean, keep it clean',
-      };
+      // empty request body
       const { statusCode: statusCode1, body: body1 } = await request(app)
         .post('/api/topics')
-        .send(empty);
+        .send({});
       expect(statusCode1).toBe(400);
       expect(body1).toHaveProperty('message', 'bad request');
-      const { statusCode: statusCode2, body: body2 } = await request(app)
-        .post('/api/topics')
-        .send(missingProperty);
+      // missing required request body property
+      const { statusCode: statusCode2, body: body2 } = await request(app).post('/api/topics').send({
+        description: 'not mean, keep it clean',
+      });
       expect(statusCode2).toBe(400);
       expect(body2).toHaveProperty('message', 'bad request');
-      const { statusCode: statusCode3, body: body3 } = await request(app)
-        .post('/api/topics')
-        .send(invalidPropertyValue);
+      // request body property has invalid data type
+      const { statusCode: statusCode3, body: body3 } = await request(app).post('/api/topics').send({
+        slug: 1337,
+        description: 'not mean, keep it clean',
+      });
       expect(statusCode3).toBe(400);
       expect(body3).toHaveProperty('message', 'bad request');
     });
@@ -112,10 +134,11 @@ describe('/api/topics', () => {
   });
   describe('GET /api/topics (READ ALL)', () => {
     test('200: responds with an object having a key of `topics` and value that is an array containing all topics', async () => {
-      const { statusCode, body } = await request(app).get('/api/topics');
+      const {
+        statusCode,
+        body: { topics },
+      } = await request(app).get('/api/topics');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('topics');
-      const { topics } = body;
       expect(Array.isArray(topics)).toBe(true);
       expect(topics).toHaveLength(3);
       for (const topic of topics) {
@@ -135,7 +158,10 @@ describe('/api/topics', () => {
 describe('/api/articles', () => {
   describe('POST /api/articles (CREATE ONE)', () => {
     test('201: responds with with an object having a key of `article` and value that is an object representing the newly created article', async () => {
-      const { statusCode, body } = await request(app).post('/api/articles').send({
+      const {
+        statusCode,
+        body: { article },
+      } = await request(app).post('/api/articles').send({
         author: 'butter_bridge',
         title: 'Who is Mitch?',
         body: 'The man behind the legend that is Mitch',
@@ -143,28 +169,30 @@ describe('/api/articles', () => {
         article_img_url: '/path/to/image/of/mitch/with/one/of/those/balck/strips/across/his/eyes',
       });
       expect(statusCode).toBe(201);
-      expect(body).toHaveProperty('article');
-      expect(body.article).toMatchObject({
+      expect(article).toMatchObject({
         article_id: expect.any(Number),
+        author: 'butter_bridge',
         title: 'Who is Mitch?',
         topic: 'mitch',
-        author: 'butter_bridge',
         body: 'The man behind the legend that is Mitch',
-        created_at: expect.toBeUTCTimestamp(),
-        votes: 0,
         comment_count: 0,
+        votes: 0,
         article_img_url: '/path/to/image/of/mitch/with/one/of/those/balck/strips/across/his/eyes',
+        created_at: expect.toBeUTCTimestamp(),
       });
     });
     test('201: newly created article has the default `article_img_url` value if not present in request body', async () => {
-      const { statusCode, body } = await request(app).post('/api/articles').send({
+      const {
+        statusCode,
+        body: { article },
+      } = await request(app).post('/api/articles').send({
         author: 'butter_bridge',
         title: 'Who is Mitch?',
         body: 'The man behind the legend that is Mitch',
         topic: 'mitch',
       });
       expect(statusCode).toBe(201);
-      expect(body.article).toHaveProperty('article_img_url', '/assets/placeholder/article.jpg');
+      expect(article).toHaveProperty('article_img_url', '/assets/placeholder/article.jpg');
     });
     test("400: responds with a 400 status and a message of 'bad request' when passed an invalid request body", async () => {
       // empty request body
@@ -221,11 +249,12 @@ describe('/api/articles', () => {
   });
   describe('GET /api/articles (READ MANY)', () => {
     test('200: responds with an object having a key of `articles` and a value that is an array containing all articles', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(Array.isArray(articles)).toBe(true);
       expect(articles).toHaveLength(10);
       for (const article of articles) {
@@ -241,98 +270,92 @@ describe('/api/articles', () => {
           comment_count: expect.any(Number),
         });
       }
-      expect(articles[0].article_id).toBe(3);
-      expect(articles[9].article_id).toBe(4);
-      expect(articles[0].comment_count).toBe(2);
-      expect(articles[9].comment_count).toBe(0);
+      expect(articles).toBeSorted({ sort_by: 'created_at', order: 'desc' });
     });
     test('200: query string can sort `articles` by author in ascending order', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles?sort_by=author&order=asc');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles?sort_by=author&order=asc');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(Array.isArray(articles)).toBe(true);
       expect(articles).toHaveLength(10);
-      expect(articles[0].article_id).toBe(1);
-      expect(articles[9].article_id).toBe(8);
+      expect(articles).toBeSorted({ sort_by: 'author', order: 'asc' });
     });
     test('200: query string can sort `articles` by title in ascending order', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles?sort_by=title&order=asc');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles?sort_by=title&order=asc');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(Array.isArray(articles)).toBe(true);
       expect(articles).toHaveLength(10);
-      expect(articles[0].article_id).toBe(6);
-      expect(articles[9].article_id).toBe(4);
+      expect(articles).toBeSorted({ sort_by: 'title', order: 'asc' });
     });
     test('200: query string can sort `articles` by topic in ascending order', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles?sort_by=topic&order=asc');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles?sort_by=topic&order=asc');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(Array.isArray(articles)).toBe(true);
       expect(articles).toHaveLength(10);
-      expect(articles[0].article_id).toBe(5);
-      expect(articles[9].article_id).toBe(2);
+      expect(articles).toBeSorted({ sort_by: 'topic', order: 'asc' });
     });
     test('200: query string can sort `articles` by vote in ascending order', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles?sort_by=votes&order=asc');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles?sort_by=votes&order=asc');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(Array.isArray(articles)).toBe(true);
       expect(articles).toHaveLength(10);
-      expect(articles[0].article_id).toBe(11);
-      expect(articles[9].article_id).toBe(5);
+      expect(articles).toBeSorted({ sort_by: 'vote', order: 'asc' });
     });
     test('200: query string can sort `articles` by comment_count in ascending order', async () => {
-      const { statusCode, body } = await request(app).get(
-        '/api/articles?sort_by=comment_count&order=asc'
-      );
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles?sort_by=comment_count&order=asc');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(Array.isArray(articles)).toBe(true);
       expect(articles).toHaveLength(10);
-      expect(articles[0].article_id).toBe(4);
-      expect(articles[9].article_id).toBe(9);
+      expect(articles).toBeSorted({ sort_by: 'comment_count', order: 'asc' });
     });
     test('200: query string can select `articles` by topic', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles?topic=cats');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles?topic=cats');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 1);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(1);
       expect(articles).toHaveLength(1);
       expect(articles[0].article_id).toBe(5);
     });
     test('200: response is paginated and returns the first 10 articles by default', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles');
+      const {
+        statusCode,
+        body: { total_count, articles },
+      } = await request(app).get('/api/articles');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('total_count', 10);
-      expect(body).toHaveProperty('articles');
-      const { articles } = body;
+      expect(total_count).toBe(10);
       expect(articles).toHaveLength(10);
-      expect(articles[0].article_id).toBe(3);
-      expect(articles[9].article_id).toBe(4);
+      expect(articles).toBeSorted({ sort_by: 'created_at', order: 'desc' });
     });
     test('200: response is paginated and returns the correct articles when passed `limit` and `p` query parameters', async () => {
       const firstPage = await request(app).get('/api/articles?limit=10&p=0');
       expect(firstPage.body).toHaveProperty('total_count', 10);
       expect(firstPage.body.articles).toHaveLength(10);
-      expect(firstPage.body.articles[0].article_id).toBe(3);
-      expect(firstPage.body.articles[9].article_id).toBe(4);
+      expect(firstPage.body.articles).toBeSorted({ sort_by: 'created_at', order: 'desc' });
       const secondPage = await request(app).get('/api/articles?limit=10&p=1');
       expect(secondPage.body).toHaveProperty('total_count', 3);
       expect(secondPage.body.articles).toHaveLength(3);
-      expect(secondPage.body.articles[0].article_id).toBe(8);
-      expect(secondPage.body.articles[2].article_id).toBe(7);
+      expect(secondPage.body.articles).toBeSorted({ sort_by: 'created_at', order: 'desc' });
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid query string", async () => {
       const { statusCode, body } = await request(app).get(
@@ -344,21 +367,22 @@ describe('/api/articles', () => {
   });
   describe('GET /api/articles/:id (READ ONE)', () => {
     test('200: responds with an object having a key of `article` and value that is an article object', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles/1');
+      const {
+        statusCode,
+        body: { article },
+      } = await request(app).get('/api/articles/1');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('article');
-      const { article } = body;
       expect(article).toMatchObject({
         article_id: 1,
+        author: 'butter_bridge',
         title: 'Living in the shadow of a great man',
         topic: 'mitch',
-        author: 'butter_bridge',
         body: 'I find this existence challenging',
-        created_at: expect.toBeUTCTimestamp(),
+        comment_count: 11,
         votes: 100,
         article_img_url:
           'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
-        comment_count: 11,
+        created_at: expect.toBeUTCTimestamp(),
       });
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
@@ -374,21 +398,23 @@ describe('/api/articles', () => {
   });
   describe('PATCH /api/articles/:id (UPDATE ONE)', () => {
     test('200: responds with with an object having a key of `article` and value that is an object representing the updated article', async () => {
-      const { statusCode, body } = await request(app).patch('/api/articles/1').send({
+      const {
+        statusCode,
+        body: { article },
+      } = await request(app).patch('/api/articles/1').send({
         inc_votes: -100,
       });
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('article');
-      expect(body.article).toMatchObject({
+      expect(article).toMatchObject({
         article_id: 1,
+        author: 'butter_bridge',
         title: 'Living in the shadow of a great man',
         topic: 'mitch',
-        author: 'butter_bridge',
         body: 'I find this existence challenging',
-        created_at: expect.toBeUTCTimestamp(),
         votes: 0,
         article_img_url:
           'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
+        created_at: expect.toBeUTCTimestamp(),
       });
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid `id` parameter", async () => {
@@ -452,19 +478,20 @@ describe('/api/articles', () => {
 describe('/api/comments', () => {
   describe('POST /api/articles/:id/comments (CREATE ONE)', () => {
     test('201: responds with with an object having a key of `comment` and value that is an object representing the newly created comment', async () => {
-      const { statusCode, body } = await request(app).post('/api/articles/1/comments').send({
+      const {
+        statusCode,
+        body: { comment },
+      } = await request(app).post('/api/articles/1/comments').send({
         username: 'butter_bridge',
         body: "I can't read this article! Where are my glasses!?",
       });
       expect(statusCode).toBe(201);
-      expect(body).toHaveProperty('comment');
-      const { comment } = body;
       expect(comment).toMatchObject({
         comment_id: expect.any(Number),
         article_id: 1,
         author: 'butter_bridge',
-        votes: 0,
         body: "I can't read this article! Where are my glasses!?",
+        votes: 0,
         created_at: expect.toBeUTCTimestamp(),
       });
     });
@@ -477,11 +504,13 @@ describe('/api/comments', () => {
       expect(body).toHaveProperty('message', 'bad request');
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the request body", async () => {
+      // empty request body
       const { statusCode: statusCode1, body: body1 } = await request(app)
         .post('/api/articles/1/comments')
         .send({});
       expect(statusCode1).toBe(400);
       expect(body1).toHaveProperty('message', 'bad request');
+      // missing required request body property
       const { statusCode: statusCode2, body: body2 } = await request(app)
         .post('/api/articles/1/comments')
         .send({
@@ -489,10 +518,12 @@ describe('/api/comments', () => {
         });
       expect(statusCode2).toBe(400);
       expect(body2).toHaveProperty('message', 'bad request');
+      // request body property has invalid data type
       const { statusCode: statusCode3, body: body3 } = await request(app)
         .post('/api/articles/1/comments')
         .send({
-          username: 'butter_bridge',
+          username: 1,
+          body: "I can't read this article! Where are my glasses!?",
         });
       expect(statusCode3).toBe(400);
       expect(body3).toHaveProperty('message', 'bad request');
@@ -516,10 +547,11 @@ describe('/api/comments', () => {
   });
   describe('GET /api/articles/:id/comments (READ ALL)', () => {
     test('200: responds with an object having a key of `comments` and value that is an array containing all comments for a given article', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles/1/comments');
+      const {
+        statusCode,
+        body: { comments },
+      } = await request(app).get('/api/articles/1/comments');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('comments');
-      const { comments } = body;
       expect(Array.isArray(comments)).toBe(true);
       expect(comments).toHaveLength(10);
       for (const comment of comments) {
@@ -527,19 +559,18 @@ describe('/api/comments', () => {
           comment_id: expect.any(Number),
           article_id: expect.any(Number),
           author: expect.any(String),
-          votes: expect.any(Number),
           body: expect.any(String),
+          votes: expect.any(Number),
           created_at: expect.toBeUTCTimestamp(),
         });
       }
-      expect(comments[0].comment_id).toBe(5);
-      expect(comments[9].comment_id).toBe(4);
     });
     test('200: response is paginated and returns the first 10 comments by default ', async () => {
-      const { statusCode, body } = await request(app).get('/api/articles/1/comments');
+      const {
+        statusCode,
+        body: { comments },
+      } = await request(app).get('/api/articles/1/comments');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('comments');
-      const { comments } = body;
       expect(Array.isArray(comments)).toBe(true);
       expect(comments).toHaveLength(10);
       for (const comment of comments) {
@@ -552,8 +583,7 @@ describe('/api/comments', () => {
           created_at: expect.toBeUTCTimestamp(),
         });
       }
-      expect(comments[0].comment_id).toBe(5);
-      expect(comments[9].comment_id).toBe(4);
+      expect(comments).toBeSorted({ sort_by: 'created_at', order: 'desc' });
     });
     test('200: response is paginated and returns the correct comments when passed `limit` and `p` query parameters', async () => {
       const firstPage = await request(app).get('/api/articles/1/comments?limit=10&p=0');
@@ -561,10 +591,12 @@ describe('/api/comments', () => {
       expect(firstPage.body.comments).toHaveLength(10);
       expect(firstPage.body.comments[0].comment_id).toBe(5);
       expect(firstPage.body.comments[9].comment_id).toBe(4);
+      expect(firstPage.body.comments).toBeSorted({ sort_by: 'created_at', order: 'desc' });
       const secondPage = await request(app).get('/api/articles/1/comments?limit=10&p=1');
       expect(secondPage.statusCode).toBe(200);
       expect(secondPage.body.comments).toHaveLength(1);
       expect(secondPage.body.comments[0].comment_id).toBe(9);
+      expect(firstPage.body.comments).toBeSorted({ sort_by: 'created_at', order: 'desc' });
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
       const { statusCode, body } = await request(app).get('/api/articles/one/comments');
@@ -579,22 +611,18 @@ describe('/api/comments', () => {
   });
   describe('PATCH /api/comments/:id (UPDATE ONE)', () => {
     test('200: responds with with an object having a key of `article` and value that is an object representing the updated article', async () => {
-      const { statusCode: statusCode1, body: body1 } = await request(app)
-        .patch('/api/comments/1')
-        .send({
-          inc_votes: 1,
-        });
-      expect(statusCode1).toBe(200);
-      expect(body1).toHaveProperty('comment');
-      expect(body1.comment).toHaveProperty('votes', 17);
-      const { statusCode: statusCode2, body: body2 } = await request(app)
-        .patch('/api/comments/1')
-        .send({
-          inc_votes: -1,
-        });
-      expect(statusCode2).toBe(200);
-      expect(body2).toHaveProperty('comment');
-      expect(body2.comment).toHaveProperty('votes', 16);
+      const {
+        body: { comment: commentVotesIncremented },
+      } = await request(app).patch('/api/comments/1').send({
+        inc_votes: 1,
+      });
+      expect(commentVotesIncremented).toHaveProperty('votes', 17);
+      const {
+        body: { comment: commentVotesDecremented },
+      } = await request(app).patch('/api/comments/1').send({
+        inc_votes: -1,
+      });
+      expect(commentVotesDecremented).toHaveProperty('votes', 16);
     });
     test("400: responds with a 400 status and a message of 'bad request' when passed an invalid `id` parameter", async () => {
       const { statusCode, body } = await request(app).patch('/api/comments/one').send({
@@ -604,25 +632,28 @@ describe('/api/comments', () => {
       expect(body).toHaveProperty('message', 'bad request');
     });
     test("400: responds with a 400 status and a message of 'bad request' when passed an invalid request body", async () => {
+      // empty request body
       const { statusCode: statusCode1, body: body1 } = await request(app)
+        .patch('/api/comments/1')
+        .send({});
+      expect(statusCode1).toBe(400);
+      expect(body1).toHaveProperty('message', 'bad request');
+      // request body property has invalid data type
+      const { statusCode: statusCode2, body: body2 } = await request(app)
         .patch('/api/comments/1')
         .send({
           inc_votes: 'one', // strings not allowed
         });
-      expect(statusCode1).toBe(400);
-      expect(body1).toHaveProperty('message', 'bad request');
-      const { statusCode: statusCode2, body: body2 } = await request(app)
+      expect(statusCode2).toBe(400);
+      expect(body2).toHaveProperty('message', 'bad request');
+      // invalid request body property type
+      const { statusCode: statusCode3, body: body3 } = await request(app)
         .patch('/api/comments/1')
         .send({
           inc_votes: 1.1, // decimals not allowed
         });
-      expect(statusCode2).toBe(400);
-      expect(body2).toHaveProperty('message', 'bad request');
-      const { statusCode: statusCode3, body: body3 } = await request(app)
-        .patch('/api/comments/1')
-        .send({}); // empty request body not allowed
       expect(statusCode3).toBe(400);
-      expect(body3).toHaveProperty('message', 'bad request');
+      expect(body2).toHaveProperty('message', 'bad request');
     });
     test("404: responds with a 404 status and a message of 'resource not found' when no article exists with given `id`", async () => {
       const { statusCode, body } = await request(app).patch('/api/comments/424242').send({
@@ -658,10 +689,11 @@ describe('/api/comments', () => {
 describe('/api/users', () => {
   describe('GET /api/users (READ ALL)', () => {
     test('200: responds with an object having a key of `users` and value that is an array containing all users', async () => {
-      const { statusCode, body } = await request(app).get('/api/users');
+      const {
+        statusCode,
+        body: { users },
+      } = await request(app).get('/api/users');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('users');
-      const { users } = body;
       expect(Array.isArray(users)).toBe(true);
       expect(users.length).toBe(4);
       for (const user of users) {
@@ -675,10 +707,11 @@ describe('/api/users', () => {
   });
   describe('GET /api/users/:username (READ ONE)', () => {
     test('200: responds with an object having a key of `user` and value that is a user object with the given `username` field', async () => {
-      const { statusCode, body } = await request(app).get('/api/users/icellusedkars');
+      const {
+        statusCode,
+        body: { user },
+      } = await request(app).get('/api/users/icellusedkars');
       expect(statusCode).toBe(200);
-      expect(body).toHaveProperty('user');
-      const { user } = body;
       expect(user).toMatchObject({
         username: 'icellusedkars',
         name: 'sam',
