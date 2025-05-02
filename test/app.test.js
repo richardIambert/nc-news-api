@@ -26,7 +26,6 @@ expect.extend({
         return a[sort_by] > b[sort_by] ? -1 : a[sort_by] < b[sort_by] ? 1 : 0;
       }
     });
-    console.log(JSON.stringify(actual) === JSON.stringify(sorted));
     return {
       pass: JSON.stringify(actual) === JSON.stringify(sorted),
       message: () =>
