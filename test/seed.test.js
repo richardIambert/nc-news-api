@@ -1,9 +1,9 @@
-import { beforeEach, afterAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import db from '../src/database/connection.js';
 import seed from '../src/database/seeds/seed.js';
 import data from '../src/database/data/test-data/index.js';
 
-beforeEach(() => seed(data));
+beforeAll(() => seed(data));
 afterAll(() => db.end());
 
 describe('seed', () => {
