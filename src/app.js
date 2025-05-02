@@ -1,4 +1,5 @@
 import express from 'express';
+import morgan from 'morgan';
 import {
   apiRouter,
   articleRouter,
@@ -9,6 +10,8 @@ import {
 import { handleError, handleNotFound } from './middleware/index.js';
 
 const app = express();
+
+app.use(morgan('common'));
 
 app.use(express.json());
 
