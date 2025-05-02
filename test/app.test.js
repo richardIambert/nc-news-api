@@ -6,6 +6,15 @@ import endpointsJSON from '../endpoints.json';
 import request from 'supertest';
 import app from '../src/app.js';
 
+expect.extend({
+  toBeUTCTimestamp(actual) {
+    return {
+      pass: /^\d{4}-[0-1]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+Z?$/.test(actual),
+      message: `${this.utils.printReceived} is not a valid UTC timestamp`,
+    };
+  },
+});
+
 beforeEach(() => seed(data));
 afterAll(() => db.end());
 
@@ -135,59 +144,54 @@ describe('/api/articles', () => {
       });
       expect(statusCode).toBe(201);
       expect(body).toHaveProperty('article');
-      const { article } = body;
-      expect(article).toMatchObject({
+      expect(body.article).toMatchObject({
         article_id: expect.any(Number),
         title: 'Who is Mitch?',
         topic: 'mitch',
         author: 'butter_bridge',
         body: 'The man behind the legend that is Mitch',
-        created_at: expect.any(String),
+        created_at: expect.toBeUTCTimestamp(),
         votes: 0,
         comment_count: 0,
         article_img_url: '/path/to/image/of/mitch/with/one/of/those/balck/strips/across/his/eyes',
       });
     });
     test('201: newly created article has the default `article_img_url` value if not present in request body', async () => {
-      const {
-        statusCode,
-        body: { article },
-      } = await request(app).post('/api/articles').send({
+      const { statusCode, body } = await request(app).post('/api/articles').send({
         author: 'butter_bridge',
         title: 'Who is Mitch?',
         body: 'The man behind the legend that is Mitch',
         topic: 'mitch',
       });
       expect(statusCode).toBe(201);
-      expect(article).toHaveProperty('article_img_url', '/assets/placeholder/article.jpg');
+      expect(body.article).toHaveProperty('article_img_url', '/assets/placeholder/article.jpg');
     });
     test("400: responds with a 400 status and a message of 'bad request' when passed an invalid request body", async () => {
-      const empty = {};
-      const missingProperty = {
-        // author missing
-        title: 'Who is Mitch?',
-        body: 'The man behind the legend that is Mitch',
-        topic: 'mitch',
-      };
-      const invalidPropertyValue = {
-        author: 1, // should be string
-        title: 'Who is Mitch?',
-        body: 'The man behind the legend that is Mitch',
-        topic: 'mitch',
-      };
+      // empty request body
       const { statusCode: statusCode1, body: body1 } = await request(app)
         .post('/api/articles')
-        .send(empty);
+        .send({});
       expect(statusCode1).toBe(400);
       expect(body1).toHaveProperty('message', 'bad request');
+      // missing required request body property
       const { statusCode: statusCode2, body: body2 } = await request(app)
         .post('/api/articles')
-        .send(missingProperty);
+        .send({
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+        });
       expect(statusCode2).toBe(400);
       expect(body2).toHaveProperty('message', 'bad request');
+      // request body property has invalid data type
       const { statusCode: statusCode3, body: body3 } = await request(app)
         .post('/api/articles')
-        .send(invalidPropertyValue);
+        .send({
+          author: 1,
+          title: 'Who is Mitch?',
+          body: 'The man behind the legend that is Mitch',
+          topic: 'mitch',
+        });
       expect(statusCode3).toBe(400);
       expect(body3).toHaveProperty('message', 'bad request');
     });
@@ -231,7 +235,7 @@ describe('/api/articles', () => {
           title: expect.any(String),
           topic: expect.any(String),
           author: expect.any(String),
-          created_at: expect.any(String),
+          created_at: expect.toBeUTCTimestamp(),
           votes: expect.any(Number),
           article_img_url: expect.any(String),
           comment_count: expect.any(Number),
@@ -350,7 +354,7 @@ describe('/api/articles', () => {
         topic: 'mitch',
         author: 'butter_bridge',
         body: 'I find this existence challenging',
-        created_at: expect.any(String),
+        created_at: expect.toBeUTCTimestamp(),
         votes: 100,
         article_img_url:
           'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
@@ -381,7 +385,7 @@ describe('/api/articles', () => {
         topic: 'mitch',
         author: 'butter_bridge',
         body: 'I find this existence challenging',
-        created_at: expect.any(String),
+        created_at: expect.toBeUTCTimestamp(),
         votes: 0,
         article_img_url:
           'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700',
@@ -461,7 +465,7 @@ describe('/api/comments', () => {
         author: 'butter_bridge',
         votes: 0,
         body: "I can't read this article! Where are my glasses!?",
-        created_at: expect.any(String),
+        created_at: expect.toBeUTCTimestamp(),
       });
     });
     test("400: responds with a 400 status and message of 'bad request' when passed an invalid value for the `id` parameter", async () => {
@@ -525,7 +529,7 @@ describe('/api/comments', () => {
           author: expect.any(String),
           votes: expect.any(Number),
           body: expect.any(String),
-          created_at: expect.any(String),
+          created_at: expect.toBeUTCTimestamp(),
         });
       }
       expect(comments[0].comment_id).toBe(5);
@@ -545,7 +549,7 @@ describe('/api/comments', () => {
           author: expect.any(String),
           votes: expect.any(Number),
           body: expect.any(String),
-          created_at: expect.any(String),
+          created_at: expect.toBeUTCTimestamp(),
         });
       }
       expect(comments[0].comment_id).toBe(5);
